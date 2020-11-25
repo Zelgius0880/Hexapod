@@ -1,0 +1,16 @@
+[Unit]
+Description=Receiving input from XWiimote
+After=bluetooth.target
+
+[Service]
+ExecStart=/usr/bin/python /root/remote.py
+Environment=LD_LIBRARY_PATH=/usr/lib PYTHONPATH=/usr/lib/python2.7/site-packages
+WorkingDirectory=/root/
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
+

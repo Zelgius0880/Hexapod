@@ -2,7 +2,6 @@ import org.junit.jupiter.api.Test
 import java.net.Socket
 import java.nio.ByteBuffer
 import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
 
 class TestingPythonServer {
     val socket: Socket by lazy {

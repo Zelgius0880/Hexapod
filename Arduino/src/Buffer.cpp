@@ -5,10 +5,12 @@
 #include "Buffer.h"
 
 uint8_t Buffer::put(uint8_t byte) {
-    if (putPosition + 1 >= BUFFER_MAX_LENGTH) return 0;
     array[putPosition] = byte;
     ++putPosition;
     ++_length;
+
+    if (putPosition >= BUFFER_MAX_LENGTH)
+        putPosition = 0;
 
     return 1;
 }
@@ -32,7 +34,7 @@ uint8_t Buffer::put(uint32_t bytes) {
 uint8_t Buffer::put(uint8_t *bytes, unsigned int length) {
     if (putPosition + length >= BUFFER_MAX_LENGTH) return 0;
 
-    for (int i = 0; i < length; ++i) {
+    for (uint16_t i = 0; i < length; ++i) {
         put(bytes[i]);
     }
 
@@ -42,22 +44,40 @@ uint8_t Buffer::put(uint8_t *bytes, unsigned int length) {
 uint8_t Buffer::get() {
     uint8_t v = array[getPosition];
     ++getPosition;
+    if (getPosition >= BUFFER_MAX_LENGTH)
+        getPosition = 0;
     return v;
 }
 
 uint16_t Buffer::getShort() {
-    return get() | get() << 8u;
+    uint16_t v = array[getPosition]
+                 | array[getPosition + 1] << 8u;
+
+    getPosition += 2;
+    if (getPosition >= BUFFER_MAX_LENGTH)
+        getPosition = 0;
+    return v;
 }
 
 float Buffer::getFloat() {
-    return get()
-    | get() << 8u
-    | get() << 16u
-    | get() << 24u;
+    float v = ((uint32_t) array[getPosition])
+              | ((uint32_t) array[getPosition + 1]) << 8u
+              | ((uint32_t) array[getPosition + 2]) << 16u
+              | ((uint32_t) array[getPosition + 3]) << 24u;
+
+    getPosition += 4;
+    if (getPosition >= BUFFER_MAX_LENGTH)
+        getPosition = 0;
+
+    return v;
 }
 
 void Buffer::reset() {
     _length = 0;
     putPosition = 0;
     getPosition = 0;
+}
+
+uint16_t Buffer::length() {
+    return _length;
 }

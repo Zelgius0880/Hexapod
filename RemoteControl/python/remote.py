@@ -7,10 +7,22 @@ import xwiimote
 import struct
 import threading
 import traceback
+import serial
+import binascii
+import time
 
 UDP_IP = "127.0.0.1"
 UDP_PORT = 5005
 
+ser = serial.Serial(
+    port='/dev/ttyAMA1',
+    baudrate=9600,
+    bytesize=serial.EIGHTBITS,
+    parity=serial.PARITY_NONE,
+    stopbits=serial.STOPBITS_ONE
+)
+
+lastFrame = 0
 
 def handle(data):
     print(" == Data == ")
@@ -31,7 +43,6 @@ def handle(data):
 
         thread = threading.Thread(target=rumble, args=milli)
         thread.start()
-
 
 def server():
     print("Starting server...")
@@ -70,16 +81,26 @@ t = threading.Thread(target=server)
 t.daemon = True
 t.start()
 
-
 def send_input(type, data):
-    print("UDP target IP: %s" % UDP_IP)
-    print("UDP target port: %s" % UDP_PORT)
+    # print("UDP target IP: %s" % UDP_IP)
+    # print("UDP target port: %s" % UDP_PORT)
     sock = socket.socket(socket.AF_INET,  # Internet
                          socket.SOCK_DGRAM)  # UDP
 
-    print(type, data)
+    if type == 6 and len(data) > 4:
+        type = 19
+
+    # print(type, data)
     message = struct.pack("b", type) + struct.pack(str(len(data)) + "h", *data)
     sock.sendto(message, (UDP_IP, UDP_PORT))
+
+    millis = int(round(time.time() * 1000))
+    if type != 19 or millis - lastFrame > 20:
+        data = data[1:len(data)]
+        data.insert(0, type)
+
+        ser.write(str(data) + '\n')
+        ser.flush()
 
 
 # display a constant

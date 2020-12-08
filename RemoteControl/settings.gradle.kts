@@ -1,4 +1,5 @@
 
 rootProject.name = "RemoteControl"
-include("kotlin")
+include("logger")
 include("python")
+include("arm")

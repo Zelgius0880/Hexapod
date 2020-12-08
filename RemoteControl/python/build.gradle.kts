@@ -2,22 +2,15 @@ import org.hidetake.groovy.ssh.core.RunHandler
 import org.hidetake.groovy.ssh.session.SessionHandler
 import org.hidetake.groovy.ssh.core.Remote
 import org.hidetake.groovy.ssh.core.Service
-import java.util.Properties
-import java.io.FileInputStream
 
 val getProps = rootProject.extra["getProps"] as (String) -> String
 
 plugins {
-    id("org.hidetake.ssh") version "2.10.1"
+    id("org.hidetake.ssh")
     id("ru.vyarus.use-python") version "2.2.0"
 }
 
-var raspberry = remotes.create("raspberry") {
-    host = "192.168.1.38"
-    user = "pi"
-    password = getProps("password")
-}
-
+var raspberry =  rootProject.extra["raspberry"] as Remote
 
 val deploy = tasks.create("deploy") {
     doLast {

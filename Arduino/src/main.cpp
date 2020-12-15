@@ -135,7 +135,7 @@ void setup() {
 
     //initialize mode and gait variables
     mode = 0;
-    gait = 1;
+    gait = 0;
     gait_speed = 0;
     reset_position = true;
     leg1_IK_control = true;
@@ -161,7 +161,7 @@ void loop() {
     //set up frame time
     currentTime = millis();
 
-    if((currentTime - previousBatteryTime )> (30*1000) || previousBatteryTime == 0) {
+    if ((currentTime - previousBatteryTime) > (30 * 1000) || previousBatteryTime == 0) {
         previousBatteryTime = currentTime;
         sendBatteryLevel();
     }
@@ -212,26 +212,27 @@ void loop() {
             if (mode == 1)                             //walking mode
             {
                 if (gait == 0)
-                    tripod_gait(frame.xR(), frame.yR(), frame.zR(), frame.xL(), frame.yL(),
+                    tripod_gait(frame.xR(), -frame.yR(), frame.zR(), frame.xL(), -frame.yL(),
                                 frame.zL());            //walk using gait 0
                 if (gait == 1)
-                    wave_gait(frame.xR(), frame.yR(), frame.zR(), frame.xL(), frame.yL(),
+                    wave_gait(frame.xR(), -frame.yR(), frame.zR(), frame.xL(), -frame.yL(),
                               frame.zL());              //walk using gait 1
                 if (gait == 2)
-                    ripple_gait(frame.xR(), frame.yR(), frame.zR(), frame.xL(), frame.yL(),
+                    ripple_gait(frame.xR(), -frame.yR(), frame.zR(), frame.xL(), -frame.yL(),
                                 frame.zL());            //walk using gait 2
                 if (gait == 3)
-                    tetrapod_gait(frame.xR(), frame.yR(), frame.zR(), frame.xL(), frame.yL(),
+                    tetrapod_gait(frame.xR(), -frame.yR(), frame.zR(), frame.xL(), -frame.yL(),
                                   frame.zL());          //walk using gait 3
             }
-            if (mode == 2)
-                translate_control(frame.xR(), frame.yR(), frame.zR(), frame.xL(), frame.yL(),
+            /*if (frame.xL() > 100 || frame.yL() > 100){
+                translate_control(frame.xR(), -frame.yR(), frame.zR(), frame.xL(), -frame.yL(),
                                   frame.zL());        //joystick control x-y-z mode
-            if (mode == 3)
-                rotate_control(frame.xR(), frame.yR(), frame.zR(), frame.xL(), frame.yL(),
+            } else*/
+           /* if (abs(frame.xR()) > 100 || abs(frame.yR()) > 100)
+                translate_control(frame.xR(), -frame.yR(), frame.zR(), frame.xL(), -frame.yL(),
                                frame.zL());           //joystick control y-p-r mode
-            if (mode == 4)
-                one_leg_lift(frame.xR(), frame.yR(), frame.zR(), frame.xL(), frame.yL(),
+            */if (mode == 4)
+                one_leg_lift(frame.xR(), -frame.yR(), frame.zR(), frame.xL(), -frame.yL(),
                              frame.zL());             //one leg lift mode
         }
     }
@@ -388,7 +389,7 @@ void leg_IK(int leg_number, float X, float Y, float Z) {
                     theta_coxa = theta_coxa - 90.0;                 //  due to atan2 results above!)
                 theta_coxa = constrain(theta_coxa, 0.0, 180.0);
                 coxa5_servo.write(int(theta_coxa));
-                femur5_servo.write(int(180 - theta_femur ));
+                femur5_servo.write(int(180 - theta_femur));
                 tibia5_servo.write(int(180 - theta_tibia));
                 break;
             case 5:
@@ -401,7 +402,7 @@ void leg_IK(int leg_number, float X, float Y, float Z) {
                         theta_coxa = theta_coxa - 45.0;               //  due to atan2 results above!)
                     theta_coxa = constrain(theta_coxa, 0.0, 180.0);
                     coxa6_servo.write(int(theta_coxa));
-                    femur6_servo.write(int( 180 - theta_femur));
+                    femur6_servo.write(int(180 - theta_femur));
                     tibia6_servo.write(int(180 - theta_tibia));
                 }
                 break;
@@ -414,10 +415,10 @@ void leg_IK(int leg_number, float X, float Y, float Z) {
 // Tripod Gait
 // Group of 3 legs move forward while the other 3 legs provide support
 //***********************************************************************
-void tripod_gait(uint16_t xR, uint16_t yR, uint16_t zR, uint16_t xL, uint16_t yL, uint16_t zL) {
+void tripod_gait(int xR, int yR, int zR, int xL, int yL, int zL) {
     //read commanded values from controller
     commandedX = yL;//map(yR, -1210, 1210, 127, -127);
-    commandedY = -xL;//map(xR, -1210, 1210, -127, 127);
+    commandedY = xL;//map(xR, -1210, 1210, -127, 127);
     commandedR = xR; //map(xR, -1210, 1210, 127, -127);
 
     //if commands more than deadband then process
@@ -454,7 +455,7 @@ void tripod_gait(uint16_t xR, uint16_t yR, uint16_t zR, uint16_t xL, uint16_t yL
 // Wave Gait
 // Legs move forward one at a time while the other 5 legs provide support
 //***********************************************************************
-void wave_gait(uint16_t xR, uint16_t yR, uint16_t zR, uint16_t xL, uint16_t yL, uint16_t zL) {
+void wave_gait(int xR, int yR, int zR, int xL, int yL, int zL) {
     //read commanded values from controller
     commandedX = yL;//map(yR, -1210, 1210, 127, -127);
     commandedY = xL;//map(xR, -1210, 1210, -127, 127);
@@ -518,7 +519,7 @@ void wave_gait(uint16_t xR, uint16_t yR, uint16_t zR, uint16_t xL, uint16_t yL, 
 // Left legs move forward rear-to-front while right also do the same,
 // but right side is offset so RR starts midway through the LM stroke
 //***********************************************************************
-void ripple_gait(uint16_t xR, uint16_t yR, uint16_t zR, uint16_t xL, uint16_t yL, uint16_t zL) {
+void ripple_gait(int xR, int yR, int zR, int xL, int yL, int zL) {
     //read commanded values from controller
     commandedX = yL;//map(yR, -1210, 1210, 127, -127);
     commandedY = xL;//map(xR, -1210, 1210, -127, 127);
@@ -584,7 +585,7 @@ void ripple_gait(uint16_t xR, uint16_t yR, uint16_t zR, uint16_t xL, uint16_t yL
 // Right front and left rear legs move forward together, then right  
 // rear and left middle, and finally right middle and left front.
 //***********************************************************************
-void tetrapod_gait(uint16_t xR, uint16_t yR, uint16_t zR, uint16_t xL, uint16_t yL, uint16_t zL) {
+void tetrapod_gait(int xR, int yR, int zR, int xL, int yL, int zL) {
     //read commanded values from controller
     commandedX = yL;//map(yR, -1210, 1210, 127, -127);
     commandedY = xL;//map(xR, -1210, 1210, -127, 127);
@@ -659,6 +660,7 @@ void compute_amplitudes() {
     //compute X and Y amplitude and constrain to prevent legs from crashing into each other
     amplitudeX = ((strideX + rotOffsetX) / 2.0);
     amplitudeY = ((strideY + rotOffsetY) / 2.0);
+
     amplitudeX = constrain(amplitudeX, -50, 50);
     amplitudeY = constrain(amplitudeY, -50, 50);
 
@@ -673,19 +675,20 @@ void compute_amplitudes() {
 //***********************************************************************
 // Body translate with controller (xyz axes)
 //***********************************************************************
-void translate_control(uint16_t xR, uint16_t yR, uint16_t zR, uint16_t xL, uint16_t yL, uint16_t zL) {
+void translate_control(int xR, int yR, int zR, int xL, int yL, int zL) {
     //compute X direction move
-    translateX = map(yR, 0, 255, -2 * TRAVEL, 2 * TRAVEL);
+    translateX = map(yR, -1210, 1210, -2 * TRAVEL, 2 * TRAVEL);
     for (leg_num = 0; leg_num < 6; leg_num++)
         current_X[leg_num] = HOME_X[leg_num] + translateX;
 
     //compute Y direction move
-    translateY = map(xR, 0, 255, 2 * TRAVEL, -2 * TRAVEL);
+    translateY = map(xR, -1210, 1210, 2 * TRAVEL, -2 * TRAVEL);
+
     for (leg_num = 0; leg_num < 6; leg_num++)
         current_Y[leg_num] = HOME_Y[leg_num] + translateY;
 
     //compute Z direction move
-    translateZ = yL;
+    translateZ = yR;
     if (translateZ > 127)
         translateZ = map(translateZ, 128, 255, 0, TRAVEL);
     else
@@ -716,21 +719,21 @@ void translate_control(uint16_t xR, uint16_t yR, uint16_t zR, uint16_t xL, uint1
 //***********************************************************************
 // Body rotate with controller (xyz axes)
 //***********************************************************************
-void rotate_control(uint16_t xR, uint16_t yR, uint16_t zR, uint16_t xL, uint16_t yL, uint16_t zL) {
+void rotate_control(int xR, int yR, int zR, int xL, int yL, int zL) {
     //compute rotation sin/cos values using controller inputs
-    sinRotX = sin((map(xL, 0, 255, A12DEG, -A12DEG)) / 1000000.0);
-    cosRotX = cos((map(xL, 0, 255, A12DEG, -A12DEG)) / 1000000.0);
-    sinRotY = sin((map(yL, 0, 255, A12DEG, -A12DEG)) / 1000000.0);
-    cosRotY = cos((map(yL, 0, 255, A12DEG, -A12DEG)) / 1000000.0);
-    sinRotZ = sin((map(xR, 0, 255, -A30DEG, A30DEG)) / 1000000.0);
-    cosRotZ = cos((map(xR, 0, 255, -A30DEG, A30DEG)) / 1000000.0);
+    sinRotX = sin((map(xR, 1210, -1210, A12DEG, -A12DEG)) / 1000000.0);
+    cosRotX = cos((map(xR, 1210, -1210, A12DEG, -A12DEG)) / 1000000.0);
+    sinRotY = sin((map(yR, 1210, -1210, A12DEG, -A12DEG)) / 1000000.0);
+    cosRotY = cos((map(yR, 1210, -1210, A12DEG, -A12DEG)) / 1000000.0);
+    sinRotZ = sin((map(xL, 1210, -1210, -A30DEG, A30DEG)) / 1000000.0);
+    cosRotZ = cos((map(xL, 1210, -1210, -A30DEG, A30DEG)) / 1000000.0);
 
     //compute Z direction move
     translateZ = yL;
-    if (translateZ > 127)
-        translateZ = map(translateZ, 128, 255, 0, TRAVEL);
+    if (translateZ > 0)
+        translateZ = map(translateZ, 0, 1210, 0, TRAVEL);
     else
-        translateZ = map(translateZ, 0, 127, -3 * TRAVEL, 0);
+        translateZ = map(translateZ, -1210, 1, -3 * TRAVEL, 0);
 
     for (int leg_num = 0; leg_num < 6; leg_num++) {
         //compute total distance from center of body to toe
@@ -775,7 +778,7 @@ void rotate_control(uint16_t xR, uint16_t yR, uint16_t zR, uint16_t xL, uint16_t
 // One leg lift mode
 // also can set z step height using capture offsets
 //***********************************************************************
-void one_leg_lift(uint16_t xR, uint16_t yR, uint16_t zR, uint16_t xL, uint16_t yL, uint16_t zL) {
+void one_leg_lift(int xR, int yR, int zR, int xL, int yL, int zL) {
     //read current leg servo 1 positions the first time
     if (leg1_IK_control == true) {
         leg1_coxa = coxa1_servo.read();
@@ -874,54 +877,54 @@ void set_all_90() {
     tibia6_servo.write(90 + TIBIA_CAL[5]);
 }
 
-void sendBatteryLevel () {
+void sendBatteryLevel() {
     int level;
-    float voltage = analogRead(A0) * 5.0 /1024 * 2;
+    float voltage = analogRead(A0) * 5.0 / 1024 * 2;
 
-    if(voltage > 8.3)
+    if (voltage > 8.3)
         level = 100;
-    else if(voltage > 8.22)
+    else if (voltage > 8.22)
         level = 95;
-    else if(voltage > 8.16)
+    else if (voltage > 8.16)
         level = 90;
-    else if(voltage > 8.05)
+    else if (voltage > 8.05)
         level = 85;
-    else if(voltage > 7.97)
+    else if (voltage > 7.97)
         level = 80;
-    else if(voltage > 7.91)
+    else if (voltage > 7.91)
         level = 75;
-    else if(voltage > 7.83)
+    else if (voltage > 7.83)
         level = 70;
-    else if(voltage > 7.75)
+    else if (voltage > 7.75)
         level = 65;
-    else if(voltage > 7.71)
+    else if (voltage > 7.71)
         level = 60;
-    else if(voltage > 7.67)
+    else if (voltage > 7.67)
         level = 55;
-    else if(voltage > 7.63)
+    else if (voltage > 7.63)
         level = 50;
-    else if(voltage > 7.59)
+    else if (voltage > 7.59)
         level = 45;
-    else if(voltage > 7.57)
+    else if (voltage > 7.57)
         level = 40;
-    else if(voltage > 7.53)
+    else if (voltage > 7.53)
         level = 35;
-    else if(voltage > 7.49)
+    else if (voltage > 7.49)
         level = 30;
-    else if(voltage > 7.45)
+    else if (voltage > 7.45)
         level = 25;
-    else if(voltage > 7.41)
+    else if (voltage > 7.41)
         level = 20; // state critical
-    else if(voltage > 7.37)
+    else if (voltage > 7.37)
         level = 15;
-    else if(voltage > 7.22)
+    else if (voltage > 7.22)
         level = 10;
-    else if(voltage > 6.55)
+    else if (voltage > 6.55)
         level = 5;
     else level = 0;
 
 
     char str[16];
-    sprintf(str,"[20,%d]", level);
+    sprintf(str, "[20,%d]", level);
     Serial.println(str);
 }

@@ -25,6 +25,8 @@ dependencies {
     implementation("com.github.mhashim6:Pi4K:0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.4")
     implementation(group = "com.pi4j", name = "pi4j-gpio-extension", version = "1.2")
+
+    testImplementation ("org.junit.platform:junit-platform-commons:1.5.2")
     testImplementation(kotlin("test-junit5"))
 }
 
@@ -55,6 +57,7 @@ val jarTask = tasks.register("fatJar", Jar::class.java) {
         with(tasks.jar.get() as CopySpec)
     }
 }
+
 
 copyJarTask(project, jarTask)
 deployJarTask(project, jarTask)

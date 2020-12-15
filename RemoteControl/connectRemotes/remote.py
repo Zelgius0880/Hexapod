@@ -5,20 +5,102 @@ from select import poll, POLLIN
 from inspect import getmembers
 import xwiimote
 import struct
+import threading
+import traceback
+import serial
+import binascii
+import time
 
 UDP_IP = "127.0.0.1"
 UDP_PORT = 5005
 
+ser = serial.Serial(
+    port='/dev/ttyS0',
+    baudrate=9600,
+    bytesize=serial.EIGHTBITS,
+    parity=serial.PARITY_NONE,
+    stopbits=serial.STOPBITS_ONE
+)
+
+lastFrame = 0
+
+def handle(data):
+    print(" == Data == ")
+    print(list(data))
+
+    if data[0] == 0:
+        dev.set_led(1, data[1] == 1)
+        dev.set_led(2, data[2] == 1)
+        dev.set_led(3, data[3] == 1)
+        dev.set_led(4, data[4] == 1)
+    elif data[0] == 1:
+        milli = struct.unpack(">q", bytearray(data[1:9]))
+
+        def rumble(time):
+            dev.rumble(True)
+            sleep(time / 1000.0)
+            dev.rumble(False)
+
+        thread = threading.Thread(target=rumble, args=milli)
+        thread.start()
+
+def server():
+    print("Starting server...")
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.bind(('0.0.0.0', 5000))
+    s.listen(5)
+    while True:
+        (conn, address) = s.accept()
+
+        looping = True
+        while looping:
+            try:
+                data = bytearray(128)
+
+                nb = conn.recv_into(data, 128)
+                if nb > 0:
+                    handle(list(data[0:nb]))
+                else:
+                    looping = False
+                    try:
+                        conn.close()
+                    except Exception as ex:
+                        traceback.print_exc(ex)
+
+            except Exception as ex:
+                traceback.print_exc(ex)
+                looping = False
+                try:
+                    conn.close()
+                except Exception as ex:
+                    traceback.print_exc(ex)
+
+
+t = threading.Thread(target=server)
+t.daemon = True
+t.start()
 
 def send_input(type, data):
-    print("UDP target IP: %s" % UDP_IP)
-    print("UDP target port: %s" % UDP_PORT)
+    # print("UDP target IP: %s" % UDP_IP)
+    # print("UDP target port: %s" % UDP_PORT)
     sock = socket.socket(socket.AF_INET,  # Internet
                          socket.SOCK_DGRAM)  # UDP
 
-    print(type, data)
-    message =  struct.pack("b", type) + struct.pack(str(len(data)) + "h",  *data)
+    if type == 6 and len(data) > 4:
+        type = 19
+
+    # print(type, data)
+    message = struct.pack("b", type) + struct.pack(str(len(data)) + "h", *data)
     sock.sendto(message, (UDP_IP, UDP_PORT))
+
+    millis = int(round(time.time() * 1000))
+    if type != 19 or millis - lastFrame > 100:
+        data = data[1:len(data)]
+        data.insert(0, type)
+
+        ser.write(str(data) + '\n')
+        ser.flush()
 
 
 # display a constant

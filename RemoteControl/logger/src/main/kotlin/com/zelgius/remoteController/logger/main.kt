@@ -9,12 +9,12 @@ fun main(args: Array<String>) {
     startLogger()
     //testingInput()
 }
-
+const val serialPort = "/dev/ttyS0"
 fun startLogger() {
     thread {
         val config = SerialConfig()
         config
-                .device("/dev/ttyAMA1")
+                .device(serialPort)
                 .baud(Baud._9600)
                 .dataBits(DataBits._8)
                 .parity(Parity.NONE)
@@ -22,7 +22,7 @@ fun startLogger() {
                 .flowControl(FlowControl.NONE)
         val serial = SerialFactory.createInstance()
         serial.open(config)
-        println("=== UART Ready /dev/ttyAMA1 ===")
+        println("=== UART Ready $serialPort ===")
 
         while (true) {
             val input = serial.inputStream

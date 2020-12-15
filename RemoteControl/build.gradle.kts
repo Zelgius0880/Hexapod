@@ -52,7 +52,7 @@ val copyJarTask by extra {
 }
 var raspberry by extra {
     remotes.create("raspberry") {
-        host = "192.168.1.39"
+        host = "192.168.1.38"
         user = "pi"
         password = getProps("password")
     }

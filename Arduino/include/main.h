@@ -71,7 +71,8 @@ const int TRAVEL = 30;                //translate and rotate travel limit consta
 const long A12DEG = 209440;           //12 degrees in radians x 1,000,000
 const long A30DEG = 523599;           //30 degrees in radians x 1,000,000
 
-const int FRAME_TIME_MS = 20;         //frame time (20msec = 50Hz)
+const int FRAME_TIME_MS = 20;         //frame time (20msec = 50Hz)//
+//const int FRAME_TIME_MS = 500;         //frame time (20msec = 50Hz)
 
 const float HOME_X[6] = {82.0, 0.0, -82.0, -82.0, 0.0, 82.0};  //coxa-to-toe home positions
 const float HOME_Y[6] = {82.0, 116.0, 82.0, -82.0, -116.0, -82.0};
@@ -89,23 +90,23 @@ void process_gamepad(uint8_t input);
 
 void leg_IK(int leg_number, float X, float Y, float Z);
 
-void tripod_gait(uint16_t xR, uint16_t yR, uint16_t zR, uint16_t xL, uint16_t yL, uint16_t zL);
+void tripod_gait(int xR, int yR, int zR, int xL, int yL, int zL);
 
-void wave_gait(uint16_t xR, uint16_t yR, uint16_t zR, uint16_t xL, uint16_t yL, uint16_t zL);
+void wave_gait(int xR, int yR, int zR, int xL, int yL, int zL);
 
-void ripple_gait(uint16_t xR, uint16_t yR, uint16_t zR, uint16_t xL, uint16_t yL, uint16_t zL);
+void ripple_gait(int xR, int yR, int zR, int xL, int yL, int zL);
 
-void tetrapod_gait(uint16_t xR, uint16_t yR, uint16_t zR, uint16_t xL, uint16_t yL, uint16_t zL);
+void tetrapod_gait(int xR, int yR, int zR, int xL, int yL, int zL);
 
 void compute_strides();
 
 void compute_amplitudes();
 
-void translate_control(uint16_t xR, uint16_t yR, uint16_t zR, uint16_t xL, uint16_t yL, uint16_t zL);
+void translate_control(int xR, int yR, int zR, int xL, int yL, int zL);
 
-void rotate_control(uint16_t xR, uint16_t yR, uint16_t zR, uint16_t xL, uint16_t yL, uint16_t zL);
+void rotate_control(int xR, int yR, int zR, int xL, int yL, int zL);
 
-void one_leg_lift(uint16_t xR, uint16_t yR, uint16_t zR, uint16_t xL, uint16_t yL, uint16_t zL);
+void one_leg_lift(int xR, int yR, int zR, int xL, int yL, int zL);
 
 void set_all_90();
 

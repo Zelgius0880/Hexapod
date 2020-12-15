@@ -1,15 +1,15 @@
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.AfterAllCallback
+import org.junit.jupiter.api.extension.ExtensionContext
 import java.net.Socket
 import java.nio.ByteBuffer
-import kotlin.test.AfterTest
 
-class TestingPythonServer {
+open class TestingPythonServerTest: AfterAllCallback {
     val socket: Socket by lazy {
         Socket("192.168.1.38", 5000)
     }
 
-    @AfterTest
-    fun disconnect() {
+    override fun afterAll(context: ExtensionContext?) {
         try {
             socket.close()
         } catch (e: Exception) {
@@ -78,4 +78,6 @@ class TestingPythonServer {
     }
 
     fun Boolean.toByte() = (if (this) 1 else 0).toByte()
+
 }
+

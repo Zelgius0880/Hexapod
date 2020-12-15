@@ -15,7 +15,7 @@ UDP_IP = "127.0.0.1"
 UDP_PORT = 5005
 
 ser = serial.Serial(
-    port='/dev/ttyAMA1',
+    port='/dev/ttyS0',
     baudrate=9600,
     bytesize=serial.EIGHTBITS,
     parity=serial.PARITY_NONE,
@@ -95,7 +95,7 @@ def send_input(type, data):
     sock.sendto(message, (UDP_IP, UDP_PORT))
 
     millis = int(round(time.time() * 1000))
-    if type != 19 or millis - lastFrame > 20:
+    if type != 19 or millis - lastFrame > 100:
         data = data[1:len(data)]
         data.insert(0, type)
 

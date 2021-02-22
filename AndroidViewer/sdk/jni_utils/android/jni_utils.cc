@@ -15,34 +15,36 @@
  */
 #include "jni_utils/android/jni_utils.h"
 
-namespace cardboard::jni {
+namespace cardboard {
+namespace jni {
 
-    void CheckExceptionInJava(JNIEnv *env) {
-        if (env->ExceptionOccurred()) {
-            env->ExceptionDescribe();
-            env->ExceptionClear();
-        }
-    }
+void CheckExceptionInJava(JNIEnv* env) {
+  if (env->ExceptionOccurred()) {
+    env->ExceptionDescribe();
+    env->ExceptionClear();
+  }
+}
 
-    void LoadJNIEnv(JavaVM *vm, JNIEnv **env) {
-        switch (vm->GetEnv(reinterpret_cast<void **>(env), JNI_VERSION_1_6)) {
-            case JNI_OK:
-                break;
-            case JNI_EDETACHED:
-                if (vm->AttachCurrentThread(env, nullptr) != 0) {
-                    *env = nullptr;
-                }
-                break;
-            default:
-                *env = nullptr;
-                break;
-        }
-    }
+void LoadJNIEnv(JavaVM* vm, JNIEnv** env) {
+  switch (vm->GetEnv(reinterpret_cast<void**>(env), JNI_VERSION_1_6)) {
+    case JNI_OK:
+      break;
+    case JNI_EDETACHED:
+      if (vm->AttachCurrentThread(env, nullptr) != 0) {
+        *env = nullptr;
+      }
+      break;
+    default:
+      *env = nullptr;
+      break;
+  }
+}
 
-    jclass LoadJClass(JNIEnv *env, const char *class_name) {
-        jclass local = env->FindClass(class_name);
-        CheckExceptionInJava(env);
-        return static_cast<jclass>(env->NewGlobalRef(local));
-    }
+jclass LoadJClass(JNIEnv* env, const char* class_name) {
+  jclass local = env->FindClass(class_name);
+  CheckExceptionInJava(env);
+  return static_cast<jclass>(env->NewGlobalRef(local));
+}
 
+}  // namespace jni
 }  // namespace cardboard

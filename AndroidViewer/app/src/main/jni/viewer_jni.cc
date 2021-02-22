@@ -19,20 +19,20 @@
 
 #include <memory>
 
-#include "android_viewer_app.h"
+#include "viewer_app.h"
 
 #define JNI_METHOD(return_type, method_name) \
   JNIEXPORT return_type JNICALL              \
-      Java_com_zelgius_androidviewer_MainActivity_##method_name
+      Java_com_zelgius_hexapod_viewer_VrActivity_##method_name
 
 namespace {
 
-    inline jlong jptr(ndk_android_viewer::AndroidViewerApp *native_app) {
+    inline jlong jptr(ndk_viewer::ViewerApp *native_app) {
         return reinterpret_cast<intptr_t>(native_app);
     }
 
-    inline ndk_android_viewer::AndroidViewerApp *native(jlong ptr) {
-        return reinterpret_cast<ndk_android_viewer::AndroidViewerApp *>(ptr);
+    inline ndk_viewer::ViewerApp *native(jlong ptr) {
+        return reinterpret_cast<ndk_viewer::ViewerApp *>(ptr);
     }
 
     JavaVM *javaVm;
@@ -48,7 +48,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
 
 JNI_METHOD(jlong, nativeOnCreate)
 (JNIEnv *env, jobject obj, jobject asset_mgr) {
-    return jptr(new ndk_android_viewer::AndroidViewerApp(javaVm, obj, asset_mgr));
+    return jptr(new ndk_viewer::ViewerApp(javaVm, obj, asset_mgr));
 }
 
 JNI_METHOD(void, nativeOnDestroy)
@@ -60,8 +60,14 @@ JNI_METHOD(void, nativeOnSurfaceCreated)
 }
 
 JNI_METHOD(void, nativeOnDrawFrame)
-(JNIEnv *env, jobject obj, jlong native_app) {
-    native(native_app)->OnDrawFrame();
+(JNIEnv *env, jobject obj, jlong native_app, jbyteArray left, jbyteArray right) {
+    jbyte *pLeft = env->GetByteArrayElements(left, nullptr);
+    jbyte *pRight = env->GetByteArrayElements(right, nullptr);
+
+    native(native_app)->OnDrawFrame(pLeft, pRight);
+
+    env->ReleaseByteArrayElements(left, pLeft, JNI_ABORT);
+    env->ReleaseByteArrayElements(right, pRight, JNI_ABORT);
 }
 
 JNI_METHOD(void, nativeOnTriggerEvent)
@@ -83,6 +89,25 @@ JNI_METHOD(void, nativeSetScreenParams)
 JNI_METHOD(void, nativeSwitchViewer)
 (JNIEnv *env, jobject obj, jlong native_app) {
     native(native_app)->SwitchViewer();
+}
+
+JNI_METHOD(jintArray, nativeGetTextureHandlers)
+(JNIEnv *env, jobject obj, jlong native_app) {
+    jintArray result;
+    result = (env)->NewIntArray(2);
+    if (result == nullptr) {
+        return nullptr; /* out of memory error thrown */
+    }
+
+     int* textures = (int*) native(native_app)->GetTextureHandlers();
+
+    jint fill [2] = {
+            textures[0],
+            textures[1]
+    };
+
+    (env)->SetIntArrayRegion(result, 0, 2, fill);
+    return result;
 }
 
 }  // extern "C"

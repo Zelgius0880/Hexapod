@@ -50,7 +50,7 @@ file(GLOB device_params_srcs "device_params/android/*.cc")
 file(GLOB rendering_srcs "rendering/*.cc")
 
 # === Cardboard Unity JNI ===
-file(GLOB cardboard_unity_jni_srcs "unity/android/*.cc")
+#file(GLOB cardboard_unity_jni_srcs "unity/android/*.cc")
 
 # === Cardboard Unity Wrapper ===
 #file(GLOB cardboard_xr_unity_srcs "unity/xr_unity_plugin/*.cc")
@@ -78,9 +78,10 @@ add_library(cardboard_api SHARED
     # Cardboard XR Provider for Unity sources
     #${cardboard_xr_provider_srcs})
         )
+
 # Includes
-#target_include_directories(cardboard_api
-#    PRIVATE ../third_party/unity_plugin_api)
+target_include_directories(cardboard_api
+    PRIVATE ../third_party/unity_plugin_api)
 
 # Build
 target_link_libraries(cardboard_api

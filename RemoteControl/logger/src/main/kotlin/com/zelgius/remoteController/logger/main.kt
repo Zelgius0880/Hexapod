@@ -1,6 +1,7 @@
 package com.zelgius.remoteController.logger
 
 import com.pi4j.io.serial.*
+import kotlinx.coroutines.coroutineScope
 import java.nio.ByteBuffer
 import kotlin.concurrent.thread
 
@@ -31,4 +32,6 @@ fun startLogger() {
             }
         }
     }
+
+
 }

@@ -2,7 +2,6 @@ package com.zelgius.androidviewer
 
 import android.content.Context
 import android.graphics.*
-import android.opengl.GLUtils
 import android.util.AttributeSet
 import android.view.SurfaceHolder
 import android.view.SurfaceView

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_VIEWER_ANDROID_SRC_MAIN_JNI_UTIL_H_
-#define ANDROID_VIEWER_ANDROID_SRC_MAIN_JNI_UTIL_H_
+#ifndef VIEWER_ANDROID_SRC_MAIN_JNI_UTIL_H_
+#define VIEWER_ANDROID_SRC_MAIN_JNI_UTIL_H_
 
 #include <android/asset_manager.h>
 #include <jni.h>
@@ -25,17 +25,17 @@
 
 #include <GLES2/gl2.h>
 
-#define LOG_TAG "AndroidViewerApp"
+#define LOG_TAG "ViewerApp"
 #define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
-#define ANDROIDVIEWER_CHECK(condition)                                    \
+#define VIEWER_CHECK(condition)                                    \
   if (!(condition)) {                                                      \
     LOGE("*** CHECK FAILED at %s:%d: %s", __FILE__, __LINE__, #condition); \
     abort();                                                               \
   }
 
-namespace ndk_android_viewer {
+namespace ndk_viewer {
 
 class Matrix4x4 {
  public:
@@ -183,6 +183,6 @@ class Texture {
   GLuint texture_id_;
 };
 
-}  // namespace ndk_hello_cardboard
+}  // namespace ndk_viewer
 
 #endif  // HELLO_CARDBOARD_ANDROID_SRC_MAIN_JNI_UTIL_H_

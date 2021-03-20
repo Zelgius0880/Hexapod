@@ -6,4 +6,8 @@
     <color name="darker_gray">#555</color>
     <color name="alignment_marker_color">#b4b4b4</color>
     <color name="white_transparent">#4cFFFFFF</color>
+    <color name="hud_main_color">#039be5</color>
+    <color name="hud_battery_high">#81c784</color>
+    <color name="hud_battery_medium">#ffd54f</color>
+    <color name="hud_battery_low">#e57373</color>
 </resources>

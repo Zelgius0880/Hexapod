@@ -32,16 +32,21 @@ internal class HudDrawingTest {
     public val writeStorageRule = GrantPermissionRule.grant(Manifest.permission.WRITE_EXTERNAL_STORAGE);
     @field:Rule
     public val mediaLocationRule = GrantPermissionRule.grant(Manifest.permission.ACCESS_MEDIA_LOCATION );
+    val context: Application = ApplicationProvider.getApplicationContext()!!
 
     @Test
     fun drawAndSaveBitmap() {
+        val paint = Paint()
         Bitmap.createBitmap(1200, 600, Bitmap.Config.ARGB_8888).apply {
 
             Canvas(this).apply {
                 drawSample(0, width / 2, this)
                 drawSample(width / 2, width, this)
 
-                BatteryLevel(this).draw(70)
+                EyeSeparator(this, paint).draw()
+                BatteryLevel(context, this, paint).draw(50)
+                WalkMode(context, this, paint).draw(WalkMode.WalkMode.TRIPOD)
+                Claw(context, this, paint).draw(0)
             }
             saveFileToDownloads("result.png", this)
         }
@@ -49,7 +54,6 @@ internal class HudDrawingTest {
     }
 
     private fun saveFileToDownloads(name: String, bitmap: Bitmap) {
-        val context: Application = ApplicationProvider.getApplicationContext()!!
         try {
             val fos: OutputStream? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val resolver: ContentResolver = context.contentResolver
@@ -83,7 +87,7 @@ internal class HudDrawingTest {
     fun drawSample(from: Int, to: Int, canvas: Canvas) {
         canvas.apply {
             val paint = Paint()
-            paint.color = Color.LTGRAY
+            paint.color = Color.DKGRAY
             drawRect(Rect(from, 0, to, height), paint)
 
             paint.color = Color.BLUE

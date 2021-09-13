@@ -59,11 +59,12 @@ uint16_t countChar(const char *array, size_t size, char c, uint16_t start = 0) {
 void Frame::parse() {
     _input = (uint8_t) nextInt(&buffer, ',');
     if (_input < STICKS && _input >= CROSS_LEFT) {
-        if (countChar((char *) buffer.array,
-                      buffer.length(), ',', 0) != 1) {
-
+        if (countChar((char *) buffer.array, buffer.length(), ',', 0) != 1) {
+#if FRAME_ENABLE_DEBUGGING_BAD_FRAME
             Serial.println(" !!!!! Bad Frame !!!!!!");
             printBuffer();
+#endif
+
             reset(); // corrupted frame
             return;
         }
@@ -71,11 +72,13 @@ void Frame::parse() {
         int i = nextInt(&buffer, 0);
         pressed =  i == 1;
     } else if (_input == STICKS) {
-        if (countChar((char *) buffer.array,
-                      buffer.length(), ',', 0) != 6) {
+        if (countChar((char *) buffer.array, buffer.length(), ',', 0) != 6) {
 
+#if FRAME_ENABLE_DEBUGGING_BAD_FRAME
             Serial.println(" !!!!! Bad Frame !!!!!!");
             printBuffer();
+#endif
+
             reset(); // corrupted frame
             return;
         }

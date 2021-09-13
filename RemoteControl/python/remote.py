@@ -1,28 +1,20 @@
 import socket
-import errno
-from time import sleep
-from select import poll, POLLIN
-from inspect import getmembers
-import xwiimote
 import struct
 import threading
 import traceback
-import serial
-import binascii
-import time
+from select import poll, POLLIN
+from time import sleep
+import IN
+import errno
+import xwiimote
 
-UDP_IP = "127.0.0.1"
+UDP_IP = "0.0.0.0"
 UDP_PORT = 5005
 
-ser = serial.Serial(
-    port='/dev/ttyS0',
-    baudrate=9600,
-    bytesize=serial.EIGHTBITS,
-    parity=serial.PARITY_NONE,
-    stopbits=serial.STOPBITS_ONE
-)
-
-lastFrame = 0
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+sock.settimeout(0.2)
 
 def handle(data):
     print(" == Data == ")
@@ -43,6 +35,7 @@ def handle(data):
 
         thread = threading.Thread(target=rumble, args=milli)
         thread.start()
+
 
 def server():
     print("Starting server...")
@@ -81,26 +74,20 @@ t = threading.Thread(target=server)
 t.daemon = True
 t.start()
 
+
 def send_input(type, data):
     # print("UDP target IP: %s" % UDP_IP)
     # print("UDP target port: %s" % UDP_PORT)
-    sock = socket.socket(socket.AF_INET,  # Internet
-                         socket.SOCK_DGRAM)  # UDP
+    # sock = socket.socket(socket.AF_INET,  # Internet
+    #                     socket.SOCK_DGRAM)  # UDP
+    # sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, struct.pack('b', 1))
 
     if type == 6 and len(data) > 4:
         type = 19
 
-    # print(type, data)
+    print(type, data)
     message = struct.pack("b", type) + struct.pack(str(len(data)) + "h", *data)
-    sock.sendto(message, (UDP_IP, UDP_PORT))
-
-    millis = int(round(time.time() * 1000))
-    if type != 19 or millis - lastFrame > 100:
-        data = data[1:len(data)]
-        data.insert(0, type)
-
-        ser.write(str(data) + '\n')
-        ser.flush()
+    sock.sendto(message, ('<broadcast>', UDP_PORT))
 
 
 # display a constant
@@ -199,6 +186,6 @@ while n < 2:
                 print("type:", evt.type)
     except IOError as e:
         if e.errno != errno.EAGAIN:
-            print("Bad")
+            print("Bad", e)
 
 exit(0)

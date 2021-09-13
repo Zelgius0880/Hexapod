@@ -17,6 +17,7 @@ package com.zelgius.hexapod.viewer
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.AssetManager
@@ -47,6 +48,11 @@ import java.nio.ByteBuffer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 import kotlin.random.Random
+import android.net.wifi.WifiManager
+import android.net.wifi.WifiManager.MulticastLock
+import com.zelgius.hexapod.viewer.overlay.OverlayInfo
+import com.zelgius.hexapod.viewer.overlay.WalkMode
+import com.zelgius.hexapod.viewer.overlay.drawOverlay
 
 
 /**
@@ -94,15 +100,21 @@ class VrActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener {
             if (event.action == MotionEvent.ACTION_DOWN) {
                 // Signal a trigger event.
                 glView.queueEvent(
-                        Runnable { nativeOnTriggerEvent(nativeApp) })
+                    Runnable { nativeOnTriggerEvent(nativeApp) })
                 true
             } else
                 false
         }
 
+        /*val wifi = getSystemService(Context.WIFI_SERVICE) as WifiManager
+        if (wifi != null) {
+            val lock = wifi.createMulticastLock("mylock")
+            lock.acquire()
+        }*/
+
         CoroutineScope(Dispatchers.IO).launch {
-            left = MjpegInputStream.read("http://192.168.1.38:8080?action=stream")!!
-            right = MjpegInputStream.read("http://192.168.1.30:8080?action=stream")!!
+            left = MjpegInputStream.read("http://192.168.1.30:8080?action=stream")!!
+            right = MjpegInputStream.read("http://192.168.1.62:8080?action=stream")!!
         }
 
         // TODO(b/139010241): Avoid that action and status bar are displayed when pressing settings
@@ -122,19 +134,6 @@ class VrActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener {
 
         // Prevents screen from dimming/locking.
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-
-        findViewById<Button>(R.id.button).setOnClickListener {
-            val view = View.inflate(this, R.layout.dialog_test, null)
-            view.findViewById<MjpegView>(R.id.player).apply {
-                CoroutineScope(Dispatchers.IO).launch {
-                    setSource(MjpegInputStream.read("http://192.168.1.38:8080/stream/video.mjpeg")!!)
-                }
-            }
-
-            AlertDialog.Builder(this).setView(
-                    view
-            ).create().show()
-        }
     }
 
     override fun onPause() {
@@ -191,9 +190,15 @@ class VrActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener {
             left?.lastFrame?.let {
                 synchronized(it) {
                     if (!it.isRecycled) {
-                        Canvas(bitmap).drawBitmap(it, null, Rect(
+                        val overlay = it.drawOverlay(
+                            this@VrActivity,
+                            OverlayInfo(50, WalkMode.WalkMode.TRIPOD, 0)
+                        )
+                        Canvas(bitmap).drawBitmap(
+                            overlay, null, Rect(
                                 0, 0, bitmap.width / 2, bitmap.height,
-                        ), Paint())
+                            ), Paint()
+                        )
                     }
                 }
             } ?: drawSample(0, bitmap.width / 2, bitmap)
@@ -201,14 +206,21 @@ class VrActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener {
             right?.lastFrame?.let {
                 synchronized(it) {
                     if (!it.isRecycled) {
-                        Canvas(bitmap).drawBitmap(it, null, Rect(
-                                bitmap.width / 2, 0, bitmap.width, bitmap.height,
-                        ), Paint())
+                        val overlay = it.drawOverlay(
+                            this@VrActivity,
+                            OverlayInfo(50, WalkMode.WalkMode.TRIPOD, 0)
+                        )
+                        Canvas(bitmap).drawBitmap(
+                            overlay,
+                            null,
+                            Rect(bitmap.width / 2, 0, bitmap.width, bitmap.height),
+                            Paint()
+                        )
+
+                        overlay.recycle()
                     }
                 }
             } ?: drawSample(bitmap.width / 2, bitmap.width, bitmap)
-
-
         }
 
         fun drawSample(from: Int, to: Int, bitmap: Bitmap) {
@@ -224,22 +236,22 @@ class VrActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener {
                 var left = Random.nextInt(from, to - 110)
 
                 drawRect(
-                        left.toFloat(),
-                        top.toFloat(),
-                        left + 100f,
-                        top + 100f,
-                        paint
+                    left.toFloat(),
+                    top.toFloat(),
+                    left + 100f,
+                    top + 100f,
+                    paint
                 )
 
                 top = Random.nextInt(10, bitmap.height - 110)
                 left = Random.nextInt(from, to - 110)
 
                 drawOval(
-                        left.toFloat(),
-                        top.toFloat(),
-                        left + 100f,
-                        top + 100f,
-                        paint
+                    left.toFloat(),
+                    top.toFloat(),
+                    left + 100f,
+                    top + 100f,
+                    paint
                 )
             }
         }
@@ -274,7 +286,10 @@ class VrActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener {
      * @return whether the READ_EXTERNAL_STORAGE is already granted.
      */
     private val isReadExternalStorageEnabled: Boolean
-        private get() = (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+        private get() = (ActivityCompat.checkSelfPermission(
+            this,
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        )
                 == PackageManager.PERMISSION_GRANTED)
 
     /** Handles the requests for activity permission to READ_EXTERNAL_STORAGE.  */
@@ -291,12 +306,15 @@ class VrActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener {
      * with a toast explaining why it is required.
      */
     override fun onRequestPermissionsResult(
-            requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        requestCode: Int, permissions: Array<String>, grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (!isReadExternalStorageEnabled) {
             Toast.makeText(this, R.string.read_storage_permission, Toast.LENGTH_LONG).show()
             if (!ActivityCompat.shouldShowRequestPermissionRationale(
-                            this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    this, Manifest.permission.READ_EXTERNAL_STORAGE
+                )
+            ) {
                 // Permission denied with checking "Do not ask again". Note that in Android R "Do not ask
                 // again" is not available anymore.
                 launchPermissionsSettings()
@@ -317,7 +335,8 @@ class VrActivity : AppCompatActivity(), PopupMenu.OnMenuItemClickListener {
         val controller = window.insetsController
         if (controller != null) {
             controller.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
-            controller.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller.systemBarsBehavior =
+                WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
 
     }

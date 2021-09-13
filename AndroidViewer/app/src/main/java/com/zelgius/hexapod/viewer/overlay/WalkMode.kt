@@ -16,81 +16,78 @@ class WalkMode(private val context: Context, canvas: Canvas, private val paint: 
 
     fun draw(mode: WalkMode) {
         drawMode(mode)
-        drawMode(mode, true)
     }
 
-    private fun drawMode(mode: WalkMode, offset: Boolean = false) {
-        val start = if (offset) canvas.width / 2f else 0f
-        val end = if (offset) canvas.width.toFloat() else canvas.width / 2f
+    private fun drawMode(mode: WalkMode) {
 
         paint.apply {
             reset()
-            color = context.getColor(R.color.hud_main_color).alpha(.5f)
+            color = context.getColor(R.color.hud_main_color)
             style = Paint.Style.FILL
         }
 
         canvas.withRotation(
             45f, end - offsetX.x - size.x - margin.x / 2,
-            canvas.height - offsetY.y - size.y - margin.y / 2
+            bottom.y - offsetY.y - size.y - margin.y / 2
         ) {
 
             // ^
             paint.color = if (mode == WalkMode.RIPPLE)
                 context.getColor(R.color.hud_main_color)
             else
-                context.getColor(R.color.hud_main_color).alpha(0.5f)
+                context.getColor(R.color.hud_main_color).alpha(0.3f)
 
             drawRect(
                 end - 2 * size.x - margin.x - offsetX.x,
-                height - 2 * size.y - margin.y - offsetY.y,
+                bottom.y - 2 * size.y - margin.y - offsetY.y,
                 end - size.x - margin.x - offsetX.x,
-                height - size.y - margin.y - offsetY.y, paint
+                bottom.y - size.y - margin.y - offsetY.y, paint
             )
 
             // >
             paint.color = if (mode == WalkMode.TETRAPOD)
                 context.getColor(R.color.hud_main_color)
             else
-                context.getColor(R.color.hud_main_color).alpha(0.5f)
+                context.getColor(R.color.hud_main_color).alpha(0.3f)
 
             drawRect(
                 end - size.x - offsetX.x,
-                height - 2 * size.y - offsetY.y - margin.y,
+                bottom.y - 2 * size.y - offsetY.y - margin.y,
                 end - offsetX.x,
-                height - size.y - margin.y - offsetY.y, paint
+                bottom.y - size.y - margin.y - offsetY.y, paint
             )
 
             // <
             paint.color = if (mode == WalkMode.WAVE)
                 context.getColor(R.color.hud_main_color)
             else
-                context.getColor(R.color.hud_main_color).alpha(0.5f)
+                context.getColor(R.color.hud_main_color).alpha(0.3f)
 
             drawRect(
                 end - 2 * size.x - margin.x - offsetX.x,
-                height - size.y - offsetY.y,
+                bottom.y - size.y - offsetY.y,
                 end - size.x - margin.x - offsetX.x,
-                height - offsetY.y, paint
+                bottom.y - offsetY.y, paint
             )
 
             // v
             paint.color = if (mode == WalkMode.TRIPOD)
                 context.getColor(R.color.hud_main_color)
             else
-                context.getColor(R.color.hud_main_color).alpha(0.5f)
+                context.getColor(R.color.hud_main_color).alpha(0.3f)
 
             drawRect(
                 end - size.x - offsetX.x,
-                height - size.y - offsetY.y,
+                bottom.y - size.y - offsetY.y,
                 end - offsetX.x,
-                height - offsetY.y, paint
+                bottom.y - offsetY.y, paint
             )
 
         }
 
         with(canvas) {
             val centerX = end - offsetX.x - size.x - margin.x / 2
-            val centerY = canvas.height - offsetY.y - size.y - margin.y / 2
+            val centerY = bottom.y - offsetY.y - size.y - margin.y / 2
             val margin = (size - icon) / 2 + (size - icon) / 4
             // -
             paint.color = if (mode == WalkMode.WAVE)
@@ -113,7 +110,7 @@ class WalkMode(private val context: Context, canvas: Canvas, private val paint: 
             paint.color = if (mode == WalkMode.TETRAPOD)
                 Color.BLACK
             else
-                Color.BLACK.alpha(0.5f)
+                Color.BLACK.alpha(0.3f)
 
             drawDrawable(
                 R.drawable.ic_tetrapod_gait,
@@ -130,7 +127,7 @@ class WalkMode(private val context: Context, canvas: Canvas, private val paint: 
             paint.color = if (mode == WalkMode.RIPPLE)
                 Color.BLACK
             else
-                Color.BLACK.alpha(0.5f)
+                Color.BLACK.alpha(0.3f)
 
             drawDrawable(
                 R.drawable.ic_ripple_gait,
@@ -147,7 +144,7 @@ class WalkMode(private val context: Context, canvas: Canvas, private val paint: 
             paint.color = if (mode == WalkMode.TRIPOD)
                 Color.BLACK
             else
-                Color.BLACK.alpha(0.5f)
+                Color.BLACK.alpha(0.3f)
 
             drawDrawable(
                 R.drawable.ic_tripod_gait,
@@ -165,16 +162,16 @@ class WalkMode(private val context: Context, canvas: Canvas, private val paint: 
         with(canvas) {
             paint.apply {
                 reset()
-                color = context.getColor(R.color.hud_main_color).alpha(.5f)
+                color = context.getColor(R.color.hud_main_color)
                 style = Paint.Style.STROKE
                 strokeWidth = 2.x
             }
 
             drawLine(
                 end - offsetX.x - size.x - (margin.x) / 2,
-                height - 15f.y,
+                bottom.y - 12f.y - offset.y,
                 start,
-                height - 15.y,
+                bottom.y - 12.y - offset.y,
                 paint
             )
 
@@ -182,15 +179,15 @@ class WalkMode(private val context: Context, canvas: Canvas, private val paint: 
 
             paint.apply {
                 reset()
-                color = context.getColor(R.color.hud_main_color).alpha(.5f)
+                color = context.getColor(R.color.hud_main_color)
                 style = Paint.Style.STROKE
                 strokeWidth = thickness
             }
             drawLine(
                 end - offsetX.x - size.x - (margin.x) / 2,
-                height - 5.y,
+                bottom.y - 5.y - offset.y,
                 start,
-                height - 5.y,
+                bottom.y - 5.y - offset.y,
                 paint
             )
         }
@@ -201,7 +198,7 @@ class WalkMode(private val context: Context, canvas: Canvas, private val paint: 
         const val icon = 40f
         const val margin = 10f
         const val offsetX = 45f
-        const val offsetY = 45f
+        const val offsetY = 45f + offset
     }
 
     enum class WalkMode {

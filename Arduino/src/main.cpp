@@ -121,7 +121,7 @@ void setup() {
     femur5_servo.attach(FEMUR5_SERVO, 610, 2400);
     tibia5_servo.attach(TIBIA5_SERVO, 610, 2400);
     coxa6_servo.attach(COXA6_SERVO, 610, 2400);
-    femur6_servo.attach(FEMUR6_SERVO, 610, 2400);
+    femur6_servo.attach(FEMUR6_SERVO);
     tibia6_servo.attach(TIBIA6_SERVO, 610, 2400);
 
     //clear offsets
@@ -246,74 +246,58 @@ void process_gamepad(uint8_t input) {
     switch (input) {
         case CROSS_DOWN:
             mode = 0;
-            gait = 0;
             reset_position = true;
             return;
         case CROSS_LEFT:
             mode = 0;
-            gait = 1;
             reset_position = true;
             return;
 
         case CROSS_UP:
             mode = 0;
-            gait = 2;
             reset_position = true;
             return;
 
         case CROSS_RIGHT:
             mode = 0;
-            gait = 3;
             reset_position = true;
             return;
 
         case BUTTON_X:
             mode = 1;
+            gait = 2;
             reset_position = true;
             return;
 
         case BUTTON_Y:
-            mode = 2;
+            mode = 1;
+            gait = 1;
             reset_position = true;
             return;
 
         case BUTTON_A:
-            mode = 3;
+            mode = 1;
+            gait = 3;
             reset_position = true;
             return;
 
         case BUTTON_B:
-            mode = 4;
+            mode = 1;
+            gait = 0;
             reset_position = true;
             return;
 
         case BUTTON_PLUS:
-            if (gait_speed == 0)
-                gait_speed = 1;
-            else
-                gait_speed = 0;
+            gait_speed = 1;
+            return;
+
+            
+        case BUTTON_MINUS:
+            gait_speed = 0;
             return;
 
         case BUTTON_HOME:
             mode = 99;
-            return;
-
-        case BUTTON_R:
-        case BUTTON_L:
-            capture_offsets = true;
-            return;
-
-        case BUTTON_ZR:
-        case BUTTON_ZL:
-            for (leg_num = 0; leg_num < 6; leg_num++)  //clear offsets
-            {
-                offset_X[leg_num] = 0;
-                offset_Y[leg_num] = 0;
-                offset_Z[leg_num] = 0;
-            }
-            leg1_IK_control = true;               //reset leg lift first pass flags
-            leg6_IK_control = true;
-            step_height_multiplier = 1.0;         //reset step height multiplier
             return;
 
         default:

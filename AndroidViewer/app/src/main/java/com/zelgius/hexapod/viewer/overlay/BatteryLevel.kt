@@ -7,42 +7,39 @@ import com.zelgius.hexapod.viewer.R
 
 class BatteryLevel(val context: Context, canvas: Canvas, private val paint: Paint) : Overlay(canvas) {
     fun draw(level: Int) {
-        drawLevel(level, false)
-        drawLevel(level, true)
+        drawLevel(level, )
     }
 
-    private fun drawLevel(level: Int, offset: Boolean = false) {
-        val start = if (offset) canvas.width / 2 else 0
-        val end = if (offset) canvas.width else canvas.width / 2
+    private fun drawLevel(level: Int) {
         with(canvas) {
             val thickness = 4f.x
 
             paint.apply {
                 reset()
-                color = context.getColor(R.color.hud_main_color).alpha(.5f)
+                color = context.getColor(R.color.hud_main_color)
                 style = Paint.Style.STROKE
                 strokeWidth = thickness
             }
             drawPath(Path().apply {
-                moveTo(end - 35.x, 0f)
-                lineTo(end - 35f.x, 100f.y)
-                lineTo(end - 5f.x, 150f.y)
-                lineTo(end - 5f.x, height - WalkMode.offsetY.y-  WalkMode.size.y  - (WalkMode.margin.y) /2)
-                lineTo(end - WalkMode.offsetX.x -  WalkMode.size.x - (WalkMode.margin.y) /2  , height.toFloat() - 5f.y)
+                moveTo(end - 35.x, offset.y)
+                lineTo(end - 35f.x, 100f.y + offset.y)
+                lineTo(end - 5f.x, 150f.y + offset.y)
+                lineTo(end - 5f.x, bottom.y - WalkMode.offsetY.y-  WalkMode.size.y  - (WalkMode.margin.y) /2)
+                lineTo(end - WalkMode.offsetX.x -  WalkMode.size.x - (WalkMode.margin.y) /2  , bottom.y - 5f.y - offset.y)
 
             }, paint)
 
 
             paint.apply {
                 reset()
-                color = context.getColor(R.color.hud_main_color).alpha(.5f)
+                color = context.getColor(R.color.hud_main_color)
                 style = Paint.Style.STROKE
                 strokeWidth = 2.x
             }
             drawPath(Path().apply {
-                moveTo(end - 15f.x, 145f.y)
-                lineTo(end - 15f.x, height - WalkMode.offsetY.y -  WalkMode.size.y  - (WalkMode.margin.y) /2)
-                lineTo(end - WalkMode.offsetX.x -  WalkMode.size.x  - (WalkMode.margin.y) /2  , height.toFloat() - 15f.y )
+                moveTo(end - 12f.x, 145f.y + offset.y)
+                lineTo(end - 12f.x, bottom.y - WalkMode.offsetY.y -  WalkMode.size.y  - (WalkMode.margin.y) /2)
+                lineTo(end - WalkMode.offsetX.x -  WalkMode.size.x  - (WalkMode.margin.y) /2  , bottom.y - 12f.y - offset.y)
             }, paint)
 
 
@@ -72,7 +69,7 @@ class BatteryLevel(val context: Context, canvas: Canvas, private val paint: Pain
                 }, paint)
             }
 
-            drawBitmap(bmp, end - 32f.x, (((100 - level)/ 100f) * bmp.height).y, paint)
+            drawBitmap(bmp, end - 32f.x, (((100 - level)/ 100f) * bmp.height).y + offset.y, paint)
 
         }
     }

@@ -10,19 +10,17 @@ import com.zelgius.hexapod.viewer.R
 class Claw(val context: Context, canvas: Canvas, private val paint: Paint) : Overlay(canvas) {
     fun draw(@IntRange(from = 0, to = 3) activated: Int) {
         for (i in 0..3) {
-            if (i == 3) drawClaw(i, false, activated = activated == i)
-            else drawPart(i, false, activated = activated == i)
+            if (i == 3) drawClaw(i, activated = activated == i)
+            else drawPart(i, activated = activated == i)
         }
 
         for (i in 0..3) {
-            if (i == 3) drawClaw(i, true, activated = activated == i)
-            else drawPart(i, true, activated = activated == i)
+            if (i == 3) drawClaw(i, activated = activated == i)
+            else drawPart(i, activated = activated == i)
         }
     }
 
-    private fun drawPart(index: Int, offset: Boolean = false, activated: Boolean) {
-        val start = if (offset) canvas.width / 2 else 0
-        val end = if (offset) canvas.width else canvas.width / 2
+    private fun drawPart(index: Int, activated: Boolean) {
 
         with(canvas) {
             val thickness = 4f.x
@@ -39,7 +37,7 @@ class Claw(val context: Context, canvas: Canvas, private val paint: Paint) : Ove
 
             Path().apply {
                 val startX = start + 30.x
-                val startY = height - 40.y - index * 30.y
+                val startY = bottom.y - 40.y - index * 30.y - offset.y
 
                 moveTo(startX + 5.x, startY)
                 // _
@@ -69,9 +67,7 @@ class Claw(val context: Context, canvas: Canvas, private val paint: Paint) : Ove
         }
     }
 
-    private fun drawClaw(index: Int, offset: Boolean = false, activated: Boolean) {
-        val start = if (offset) canvas.width / 2 else 0
-        val end = if (offset) canvas.width else canvas.width / 2
+    private fun drawClaw(index: Int, activated: Boolean) {
 
         with(canvas) {
             val thickness = 4f.x
@@ -88,7 +84,7 @@ class Claw(val context: Context, canvas: Canvas, private val paint: Paint) : Ove
 
             Path().apply {
                 val startX = start + 30.x
-                val startY = height - 40.y - 3 * 30.y
+                val startY = bottom.y - 40.y - 3 * 30.y - offset.y
 
                 moveTo(startX + 5.x, startY)
 

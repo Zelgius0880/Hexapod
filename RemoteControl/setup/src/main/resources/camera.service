@@ -1,0 +1,14 @@
+[Unit]
+Description=Create the camera server
+
+[Service]
+ExecStart=/usr/local/bin/mjpg_streamer -i "input_raspicam.so -x 600 -y 600 -fps 0.1 -quality 10" -o "output_http.so -w ./www"
+WorkingDirectory=/home/pi/
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
+

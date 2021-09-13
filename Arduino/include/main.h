@@ -41,26 +41,8 @@ const int COXA5_SERVO = 43;
 const int FEMUR5_SERVO = 45;
 const int TIBIA5_SERVO = 47;
 const int COXA6_SERVO = 49;
-const int FEMUR6_SERVO = 51;
+const int FEMUR6_SERVO = 20;
 const int TIBIA6_SERVO = 53;
-
-const int RED_LED1 = 22;            //LED port definitions
-const int GREEN_LED1 = 24;
-const int RED_LED2 = 26;
-const int GREEN_LED2 = 28;
-const int RED_LED3 = 30;
-const int GREEN_LED3 = 32;
-const int RED_LED4 = 34;
-const int GREEN_LED4 = 36;
-const int RED_LED5 = 38;
-const int GREEN_LED5 = 40;
-const int RED_LED6 = 42;
-const int GREEN_LED6 = 44;
-const int RED_LED7 = 46;
-const int GREEN_LED7 = 48;
-const int RED_LED8 = 50;
-const int GREEN_LED8 = 52;
-
 
 const int COXA_LENGTH = 51;           //leg part lengths
 const int FEMUR_LENGTH = 65;

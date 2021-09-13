@@ -1,5 +1,5 @@
 
 rootProject.name = "RemoteControl"
-include("logger")
 include("python")
-include("arm")
+include("controller")
+include("setup")

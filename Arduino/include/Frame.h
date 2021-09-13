@@ -28,6 +28,7 @@
 #define STICKS          19
 
 #define FRAME_ENABLE_DEBUGGING false
+#define FRAME_ENABLE_DEBUGGING_BAD_FRAME false
 
 #include "Buffer.h"
 

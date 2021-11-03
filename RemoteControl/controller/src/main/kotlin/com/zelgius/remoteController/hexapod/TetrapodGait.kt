@@ -9,8 +9,8 @@ class TetrapodGait : Gait() {
     override val case: IntArray = intArrayOf(1, 3, 2, 1, 2, 3)
     override val numTicksDivider: Double = 3.0
 
-    override fun computePosition(amplitude: Point, leg: Int, case: Int) {
-        when (case) {
+    override fun computePosition(numTicks: Double, amplitude: Point, leg: Int) {
+        when (case[leg]) {
             1 -> {                     //move foot forward (raise and lower)
                 current[leg].x = HOME[leg].x - amplitude.x * cos(PI * tick / numTicks)
                 current[leg].y = HOME[leg].y - amplitude.y * cos(PI * tick / numTicks)

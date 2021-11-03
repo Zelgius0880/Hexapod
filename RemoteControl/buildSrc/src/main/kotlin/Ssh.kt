@@ -64,7 +64,7 @@ fun Project.scp(
 }
 
 fun Project.ssh(
-    command: String,
+    vararg commands: String,
     remote: Remote = Remote(
         host = getProps("remote.host"),
         user = getProps("remote.user"),
@@ -78,7 +78,7 @@ fun Project.ssh(
         "ssh"(
             "host" to remote.host,
             "username" to remote.user,
-            "command" to command,
+            "command" to commands.joinToString(" && "),
             (if (remote.keyFile != null) "keyfile" else "password") to
                     (remote.keyFile ?: remote.password),
             "trust" to "yes",

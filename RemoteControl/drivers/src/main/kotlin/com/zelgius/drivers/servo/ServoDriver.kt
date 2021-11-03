@@ -1,4 +1,4 @@
-package com.zelgius.remoteController.pca9685
+package com.zelgius.drivers.servo
 
 import com.pi4j.context.Context
 import com.pi4j.io.i2c.I2C
@@ -6,7 +6,7 @@ import com.pi4j.io.i2c.I2CProvider
 import kotlin.math.roundToInt
 
 open class ServoDriver protected constructor(
-    val pca: PCA9685Driver
+    val pca: PCA9685Driver,
 ) {
 
     protected constructor(
@@ -26,19 +26,11 @@ open class ServoDriver protected constructor(
             address: Int = 0x40,
             clockSpeed: Long = 25000000,
             frequency: Long = 50
-        ): ServoDriver = (i2CProvider.create<I2C>(1, address) ).let {
+        ): ServoDriver = (i2CProvider.create<I2C>(1, address)).let {
             ServoDriver(context, it, clockSpeed).apply {
                 frequency(frequency)
             }
         }
-
-        suspend fun newInstance(
-            pca: PCA9685Driver,
-            frequency: Long = 50
-        ): ServoDriver = ServoDriver(pca).apply {
-            frequency(frequency)
-        }
-
     }
 
     val servos = ServoList()
@@ -53,16 +45,25 @@ open class ServoDriver protected constructor(
                     maxPulse = 2450,
                 )
             }
+
+        fun get(index: Int, config: ServoConfig): Servo = Servo(
+            pca.channels[index],
+            config.actuationRange,
+            config.minPulse,
+            config.maxPulse
+        ).also {
+            channels[index] = it
+        }
     }
 }
 
 abstract class BaseServo(
-    val pwmChannel: PWMChannel,
-    val minPulse: Long = 750,
-    val maxPulse: Long = 2250,
-    val maxDuty: Double = maxPulse.toDouble() * pwmChannel.frequency / 1000000 * 0xFFFF,
-    val minDuty: Double = minPulse.toDouble() * pwmChannel.frequency / 1000000 * 0xFFFF,
-    val dutyRange: Double = maxDuty - minDuty
+    private val pwmChannel: PWMChannel,
+    private val minPulse: Long = 750,
+    private val maxPulse: Long = 2250,
+    private val maxDuty: Double = maxPulse.toDouble() * pwmChannel.frequency / 1000000 * 0xFFFF,
+    private val minDuty: Double = minPulse.toDouble() * pwmChannel.frequency / 1000000 * 0xFFFF,
+    private val dutyRange: Double = maxDuty - minDuty
 ) {
     var fraction: Double?
         get() =
@@ -97,6 +98,22 @@ class Servo(
                 value / actuationRange.toDouble()
             }
         }
+
+    var radian: Double?
+        get() = angle?.toDouble()?.toRadian()
+        set(value) {
+            angle = value?.toDegree()?.roundToInt()
+        }
+
+    private fun Double.toDegree() = this * 180 / Math.PI
+    private fun Double.toRadian() = this / 180 * Math.PI
+}
+
+enum class ServoConfig(val actuationRange: Int, val minPulse: Long, val maxPulse: Long) {
+    MG90S(actuationRange = 180, minPulse = 450, maxPulse = 2450),
+    MG90Sv2(actuationRange = 180, minPulse = 450, maxPulse = 2450),
+    MG90D(actuationRange = 180, minPulse = 700, maxPulse = 2100)
+    //MG90D(actuationRange = 180, minPulse = 690, maxPulse = 2200)
 }
 
 

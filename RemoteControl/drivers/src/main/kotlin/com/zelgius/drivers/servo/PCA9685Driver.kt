@@ -1,15 +1,15 @@
-package com.zelgius.remoteController.pca9685
+package com.zelgius.drivers.servo
 
 import com.pi4j.context.Context
 import com.pi4j.io.i2c.*
-import com.zelgius.remoteController.I2C_PROVIDER
+import com.zelgius.drivers.DEFAULT_I2C_PROVIDER
 import kotlinx.coroutines.delay
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 class PCA9685Driver(
     private val context: Context,
-    private val device: I2C = context.provider(I2C_PROVIDER),
+    private val device: I2C = context.provider(DEFAULT_I2C_PROVIDER),
     private val clockSpeed: Long = 25000000
 ) {
     companion object {

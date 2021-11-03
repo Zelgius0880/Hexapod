@@ -1,22 +1,23 @@
 package com.zelgius.remoteController.arm
 
-import com.zelgius.remoteController.pca9685.Servo
-import com.zelgius.remoteController.pca9685.ServoDriver
-
+import com.zelgius.drivers.servo.Servo
+import com.zelgius.drivers.servo.ServoDriver
 
 class Arm private constructor() {
     // Segment order
     // ----------------
     //
     // O -- O -- O -- <
-    // 12   13   14   15
+    // 12    9   10   11
     //
 
     var enabled = false
 
+    private val servoIndex = arrayOf(12, 9, 10, 11)
+
     var currentIndex = 0
     val currentServo
-        get() = driver.servos[12+currentIndex]
+        get() = driver.servos[servoIndex[currentIndex]]
 
     fun next() {
         if (enabled) {
@@ -35,9 +36,9 @@ class Arm private constructor() {
     fun initPosition() {
         currentIndex = 0
         driver.servos[12].angle = 90
-        driver.servos[13].angle = 160
-        driver.servos[14].angle = 160
-        driver.servos[15].angle = 0
+        driver.servos[9].angle = 160
+        driver.servos[10].angle = 160
+        driver.servos[11].angle = 90
     }
 
     enum class Direction { BACKWARD, FORWARD }
@@ -85,13 +86,13 @@ class Arm private constructor() {
 
     lateinit var driver: ServoDriver
     fun test() {
-        driver.servos[15].angle = 180
+        driver.servos[11].angle = 180
         Thread.sleep(500)
-        driver.servos[15].angle = 0
+        driver.servos[11].angle = 0
         Thread.sleep(500)
-        driver.servos[15].angle = 180
+        driver.servos[11].angle = 180
         Thread.sleep(500)
-        driver.servos[15].angle = 0
+        driver.servos[11].angle = 0
     }
 
     companion object {

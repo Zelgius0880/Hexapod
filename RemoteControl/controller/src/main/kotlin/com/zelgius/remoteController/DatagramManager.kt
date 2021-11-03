@@ -6,11 +6,15 @@ import java.net.DatagramSocket
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-class DatagramManager(private val debug: Boolean = false, var inputReceived: (Control) -> Unit) : Thread() {
+class DatagramManager(val debug: Boolean = false, var inputReceived: (Control) -> Unit) : Thread() {
     private val ds = DatagramSocket(5005)
     private val buf = ByteArray(128)
 
     var stop = false
+    set(value) {
+        field = value
+        if(value) ds.close()
+    }
 
     override fun run() {
         while (!stop) {
@@ -18,7 +22,8 @@ class DatagramManager(private val debug: Boolean = false, var inputReceived: (Co
             ds.receive(dp)
 
             val result = dp.data.sliceArray(0 until dp.length)
-            println(result.joinToString())
+
+            if(debug) println(result.joinToString())
 
             inputReceived(Control(ByteBuffer.wrap(result).apply { order(ByteOrder.LITTLE_ENDIAN) }))
         }

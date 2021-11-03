@@ -22,7 +22,7 @@ fun Project.setupJavaDeployTasks(file: File, shadowJar: TaskProvider<*>) {
     val copy = tasks.create("copy") {
         doLast {
             scp(file, "/home/pi")
-            ssh("chmod +x ${file.name}")
+            ssh("chmod +x ${file.name}", "sudo pkill -f ${file.name}")
         }
     }.also {
         it.dependsOn(shadowJar)
@@ -30,7 +30,7 @@ fun Project.setupJavaDeployTasks(file: File, shadowJar: TaskProvider<*>) {
 
     tasks.create("deploy") {
         doLast {
-            ssh("sudo java -jar ${file.name}")
+            ssh( "sudo java -jar ${file.name}")
         }
     }.dependsOn(copy)
 

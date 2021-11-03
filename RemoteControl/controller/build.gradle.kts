@@ -3,7 +3,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     application
-    kotlin("jvm") version "1.5.21"
+    kotlin("jvm")
     id("com.github.johnrengelman.shadow") version "7.0.0"
 }
 
@@ -21,15 +21,13 @@ repositories {
 
 
 dependencies {
-    val pi4jVersion = "2.0"
+    implementation(project(":drivers"))
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2-native-mt")
-    implementation("com.pi4j:pi4j-core:$pi4jVersion")
-    implementation(group = "com.pi4j", name = "pi4j-plugin-linuxfs", version = pi4jVersion)
-    implementation(group = "com.pi4j", name = "pi4j-plugin-pigpio", version = pi4jVersion)
-    implementation(group = "com.pi4j", name = "pi4j-plugin-raspberrypi", version = pi4jVersion)
+    implementation("com.github.ajalt.mordant:mordant:2.0.0-beta2")
+    implementation("com.github.ajalt.mordant:mordant:2.0.0-beta2")
 
-    testImplementation("org.junit.platform:junit-platform-commons:1.7.2")
+    testImplementation("org.slf4j:slf4j-simple:2.0.0-alpha0")
     testImplementation(kotlin("test-junit5"))
 
 }
@@ -39,6 +37,8 @@ tasks.withType(KotlinCompile::class.java) {
         val options = this as org.jetbrains.kotlin.gradle.dsl.KotlinJvmOptions
         options.jvmTarget = "1.8"
     }
+
+    //project.projectDir
 }
 
 
@@ -46,7 +46,6 @@ tasks.withType(KotlinCompile::class.java) {
 application {
     mainClass.set("${mainPackage}.MainKt")
 }
-
 
 lateinit var archiveJar: Jar
 tasks {

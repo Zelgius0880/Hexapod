@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
-    <bytecodeTargetLevel target="15" />
+    <bytecodeTargetLevel target="15">
+      <module name="mosaic.compose.compiler-hosted.main" target="1.8" />
+      <module name="mosaic.compose.compiler-hosted.test" target="1.8" />
+      <module name="mosaic.compose.compiler.main" target="1.8" />
+      <module name="mosaic.compose.compiler.test" target="1.8" />
+      <module name="mosaic.compose.runtime.main" target="1.8" />
+      <module name="mosaic.compose.runtime.test" target="1.8" />
+      <module name="mosaic.mosaic-gradle-plugin.main" target="1.8" />
+      <module name="mosaic.mosaic-gradle-plugin.test" target="1.8" />
+      <module name="mosaic.mosaic-runtime.main" target="1.8" />
+      <module name="mosaic.mosaic-runtime.test" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
 </project>

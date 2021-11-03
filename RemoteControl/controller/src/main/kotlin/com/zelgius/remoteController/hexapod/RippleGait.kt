@@ -9,8 +9,8 @@ class RippleGait : Gait() {
     override val case: IntArray = intArrayOf(2, 6, 4, 1, 3, 5)
     override val numTicksDivider: Double = 2.0
 
-    override fun computePosition(amplitude: Point, leg: Int, case: Int) {
-        when (case) {
+    override fun computePosition(numTicks: Double, amplitude: Point, leg: Int) {
+        when (case[leg]) {
             1 -> {                               //move foot forward (raise)
                 current[leg].x = HOME[leg].x - amplitude.x * cos(PI * tick / (numTicks * 2))
                 current[leg].y = HOME[leg].y - amplitude.y * cos(PI * tick / (numTicks * 2))

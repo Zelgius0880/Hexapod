@@ -11,7 +11,7 @@ abstract class Gait {
             Point(-82.0, 82.0, -80.0),
             Point(-82.0, -82.0, -80.0),
             Point(0.0, -116.0, -80.0),
-            Point(82.0 - 82.0 - 80.0)
+            Point(82.0, - 82.0, - 80.0)
         )
 
         val BODY = arrayOf(
@@ -23,11 +23,9 @@ abstract class Gait {
             Point(110.4, -58.4, 0.0)
         )
 
-
-        const val STEP_HEIGHT_MULTIPLIER = 1.0
-
-        const val MAX_AXIS = 1210
-        const val FRAME_TIME_MS = 20
+        const val MAX_AXIS = 1300.0
+        const val FRAME_TIME_MS = 20L
+        //const val FRAME_TIME_MS = 100L
         const val SPEED_HIGH = 3240
         const val SPEED_LOW = 1080
 
@@ -36,28 +34,32 @@ abstract class Gait {
     abstract val case: IntArray
     abstract val numTicksDivider: Double
 
+    private val stepHeightMultiplier = 1.0
+
     val current = Array(6) { Point() }
     var tick = 0
 
-    var duration = 1080
+    var duration = SPEED_HIGH
     var sinRotationZ = 0.0
     var cosRotationZ = 0.0
     var isFast = true
 
-    val numTicks get() = (duration / FRAME_TIME_MS / numTicksDivider).roundToInt()
+    val numTicks get() = (duration / FRAME_TIME_MS / numTicksDivider)
 
-    fun move(r: Point, l: Point) {
+    fun computeMovement(r: Point, l: Point): List<Point> {
 
-        if (!r.isDeadBand || tick > 0) {
+        if (!l.isDeadBand || !r.isDeadBand || tick > 0) {
             val stride = computeStrides(Point(l.x, l.y, r.x))
-            case.forEachIndexed { leg, case ->
+            (0 until 6).forEach { leg ->
                 val amplitude = computeAmplitudes(leg, stride)
-                computePosition(amplitude, leg, case)
+                computePosition(numTicks, amplitude, leg)
             }
 
             if (tick < numTicks - 1) ++tick
             else tick = 0
         }
+
+        return current.toList()
     }
 
     private fun computeStrides(commanded: Point): Point {
@@ -70,13 +72,13 @@ abstract class Gait {
         sinRotationZ = sin(Math.toRadians(stride.z))
         cosRotationZ = cos(Math.toRadians(stride.z))
 
-        duration = if (isFast) 3240 else 1080
+        duration = if (!isFast) 3240 else 1080
         return stride
     }
 
     private fun computeAmplitudes(leg: Int, stride: Point): Point {
         val total = Point(
-            HOME[leg].x + BODY[leg].y,
+            HOME[leg].x + BODY[leg].x,
             HOME[leg].y + BODY[leg].y
         )
 
@@ -87,9 +89,9 @@ abstract class Gait {
             ((stride.x + rotOffsetX) / 2.0).coerceIn(-50.0, 50.0),
             ((stride.y + rotOffsetY) / 2.0).coerceIn(-50.0, 50.0),
             if ((stride.x + rotOffsetX).absoluteValue > (stride.y + rotOffsetY).absoluteValue)
-                STEP_HEIGHT_MULTIPLIER * (stride.x + rotOffsetX) / 4.0
+                stepHeightMultiplier * (stride.x + rotOffsetX) / 4.0
             else
-                STEP_HEIGHT_MULTIPLIER * (stride.y + rotOffsetY) / 4.0
+                stepHeightMultiplier * (stride.y + rotOffsetY) / 4.0
         )
     }
 
@@ -101,11 +103,15 @@ abstract class Gait {
         }
     }
 
-    abstract fun computePosition(amplitude: Point, leg: Int, case: Int)
+    abstract fun computePosition(numTicks:Double, amplitude: Point, leg: Int)
 
 }
 
-class Point(var x: Double = 0.0, var y: Double = 0.0, var z: Double = 0.0) {
+data class Point(var x: Double = 0.0, var y: Double = 0.0, var z: Double = 0.0) {
+    companion object {
+        fun forLeg(coxa: Double, femur: Double, tibia: Double) = Point(x = coxa, y = femur, z =  tibia)
+    }
     val isDeadBand: Boolean
-        get() = abs(x) <= 15 || abs(y) <= 15 || abs(z) <= 15
+        get() = abs(x) <= 15 && abs(y) <= 15 && abs(z) <= 15
+
 }

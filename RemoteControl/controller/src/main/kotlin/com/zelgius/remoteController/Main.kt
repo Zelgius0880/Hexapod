@@ -21,7 +21,19 @@ val socket: Socket by lazy {
 val datagramManager = DatagramManager {}
 private val context by lazy { Pi4J.newAutoContext() }
 
-fun main() = runBlocking {
+val RUMBLE_CONTROLS = arrayOf(
+    CONTROLS.BUTTON_A,
+    CONTROLS.BUTTON_B,
+    CONTROLS.BUTTON_X,
+    CONTROLS.BUTTON_Y,
+    CONTROLS.BUTTON_MINUS,
+    CONTROLS.BUTTON_PLUS,
+    CONTROLS.BUTTON_L,
+    CONTROLS.BUTTON_R,
+    CONTROLS.BUTTON_HOME,
+)
+
+fun main(args: Array<String>) = runBlocking {
     System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "INFO")
 
     datagramManager.start()
@@ -55,7 +67,8 @@ fun main() = runBlocking {
             CONTROLS.CROSS_LEFT,
             CONTROLS.CROSS_RIGHT,
             CONTROLS.CROSS_UP,
-            CONTROLS.CROSS_DOWN -> {/* PITCH */
+            CONTROLS.CROSS_DOWN -> {
+                if (it.isPressed) hexapod.moveAxes(it)
             }
             CONTROLS.BUTTON_A -> if (it.isPressed) hexapod.gait = TetrapodGait()
             CONTROLS.BUTTON_B -> if (it.isPressed) hexapod.gait = TripodGait()
@@ -81,7 +94,7 @@ fun main() = runBlocking {
                         }
                     }
                 } else {
-                    if(System.currentTimeMillis() - homePressedTime < 1000L)
+                    if (System.currentTimeMillis() - homePressedTime < 1000L)
                         hexapod.testMode = false
 
                     if (timerJob?.isActive == true)
@@ -91,7 +104,7 @@ fun main() = runBlocking {
 
                     hexapod.reset()
 
-                    if(!hexapod.testMode) {
+                    if (!hexapod.testMode) {
                         RemoteCommand(socket).apply {
                             rumble(300)
                         }
@@ -128,7 +141,7 @@ fun main() = runBlocking {
             }
         }
 
-        if (it.type != CONTROLS.STICK)
+        if (it.type in RUMBLE_CONTROLS)
             updateIndicators(arm)
     }
 
@@ -144,25 +157,22 @@ fun main() = runBlocking {
 fun updateIndicators(arm: Arm) {
     when (arm.currentIndex) {
         0 -> RemoteCommand(socket).apply {
-            sendLed(led1 = false, led2 = true, led3 = true, led4 = true)
-            rumble(50)
+            sendLed(led1 = true)
         }
 
         1 -> RemoteCommand(socket).apply {
-            sendLed(led1 = true, led2 = false, led3 = true, led4 = true)
-            rumble(50)
+            sendLed(led2 = true)
         }
 
         2 -> RemoteCommand(socket).apply {
-            sendLed(led1 = true, led2 = true, led3 = false, led4 = true)
-            rumble(50)
+            sendLed(led3 = true)
         }
 
         3 -> RemoteCommand(socket).apply {
-            sendLed(led1 = true, led2 = true, led3 = true, led4 = false)
-            rumble(50)
+            sendLed(led4 = true)
         }
-    }
+        else -> return
+    }.also { it.rumble(100) }
 
     // TODO Broadcast the different indicators
 }

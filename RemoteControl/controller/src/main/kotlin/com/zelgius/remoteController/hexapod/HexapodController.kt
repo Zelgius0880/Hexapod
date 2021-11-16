@@ -1,8 +1,10 @@
 package com.zelgius.remoteController.hexapod
 
+import com.pi4j.exception.Pi4JException
 import com.zelgius.drivers.servo.Servo
 import com.zelgius.drivers.servo.ServoConfig
 import com.zelgius.drivers.servo.ServoDriver
+import com.zelgius.remoteController.controls.CONTROLS
 import com.zelgius.remoteController.controls.Control
 import com.zelgius.remoteController.hexapod.HexapodController.Leg.Companion.FEMUR_LENGTH
 import com.zelgius.remoteController.hexapod.HexapodController.Leg.Companion.TIBIA_LENGTH
@@ -37,6 +39,8 @@ class HexapodController(
         )
     }
 
+    private var rotationAxes = Point()
+
     private val legs: Array<Leg> = arrayOf(
         Leg(
             legDriver1.servos.get(0, ServoConfig.MG90D),
@@ -44,7 +48,7 @@ class HexapodController(
             legDriver1.servos.get(2, ServoConfig.MG90D)
         ),
         Leg(
-            legDriver1.servos.get(3, ServoConfig.MG90S),
+            legDriver1.servos.get(3, ServoConfig.MG90Sv2),
             legDriver1.servos.get(4, ServoConfig.MG90D),
             legDriver1.servos.get(5, ServoConfig.MG90D)
         ),
@@ -59,13 +63,13 @@ class HexapodController(
             legDriver2.servos.get(15, ServoConfig.MG90D)
         ),
         Leg(
-            legDriver2.servos.get(10, ServoConfig.MG90S),
+            legDriver2.servos.get(10, ServoConfig.MG90Sv2),
             legDriver2.servos.get(11, ServoConfig.MG90D),
             legDriver2.servos.get(12, ServoConfig.MG90Sv2)
         ),
-        Leg( // In a perfect world, tibia should be 8 and coax 7, but I mess up in the wiring and I don't want to remove all the stuff
+        Leg(
+            legDriver2.servos.get(7, ServoConfig.MG90Sv2),
             legDriver2.servos.get(8, ServoConfig.MG90D),
-            legDriver2.servos.get(7, ServoConfig.MG90D),
             legDriver2.servos.get(9, ServoConfig.MG90D)
         ),
     )
@@ -104,7 +108,11 @@ class HexapodController(
 
                     if (l != null && r != null)
                         gait?.computeMovement(r, l)?.forEachIndexed { index, p ->
-                            moveLeg(index, p)
+                            try {
+                                moveLeg(index, p)
+                            } catch (e: Pi4JException) {
+                                println(e.message)
+                            }
                         }
 
                     lastStamp = System.currentTimeMillis()
@@ -144,7 +152,7 @@ class HexapodController(
             testLegIndex++
             testLegIndex = testLegIndex.coerceAtMost(5)
         }
-        gait?.duration = Gait.SPEED_HIGH
+        gait?.isFast = true
     }
 
     fun speedDown() {
@@ -152,7 +160,7 @@ class HexapodController(
             testLegIndex--
             testLegIndex = testLegIndex.coerceAtLeast(0)
         }
-        gait?.duration = Gait.SPEED_LOW
+        gait?.isFast = false
     }
 
     fun move(control: Control) {
@@ -169,16 +177,31 @@ class HexapodController(
             control.data.short
         ).map { it.toDouble() }
 
-        val l = Point(xL, -yL, zL)//.remap()
-        val r = Point(xR, -yR, zR)//.remap()
+        val l = Point(-xL, yL, zL)
 
-        pointL = l
-        pointR = r
+        // on r stick x and y are inverted ¯\_(ツ)_/¯
+        val r = Point(-yR, xR, zR)
+
+        if (!l.isDeadBand) pointL = l
+        if (!r.isDeadBand) pointR = r
+
+    }
+
+    fun moveAxes(control: Control) {
+        when (control.type) {
+            CONTROLS.CROSS_LEFT -> rotationAxes.x = (rotationAxes.x - 1).coerceAtLeast(-20.0)
+            CONTROLS.CROSS_RIGHT -> rotationAxes.x = (rotationAxes.x + 1).coerceAtMost(20.0)
+            CONTROLS.CROSS_UP -> rotationAxes.y = (rotationAxes.y - 1).coerceAtLeast(-20.0)
+            CONTROLS.CROSS_DOWN -> rotationAxes.y = (rotationAxes.y + 1).coerceAtMost(20.0)
+            else -> return
+        }
+
+        gait?.moveAxes(rotationAxes)
     }
 
     @Synchronized
-    private fun moveLeg(legIndex: Int, point: Point) {
-        val (x, y, z) = point
+    private fun moveLeg(legIndex: Int, legPoint: Point) {
+        val (x, y, z) = legPoint
 
         val l0 = sqrt(x.pow(2) + y.pow(2)) - Leg.COXA_LENGTH
         val l3 = sqrt(l0.pow(2) + z.pow(2))
@@ -219,7 +242,7 @@ class HexapodController(
                     )
                 }
                 2 -> {
-                    thetaCoxa = (thetaCoxa + 135.0).coerceIn(0.0, 180.0)               //compensate for leg mounting
+                    thetaCoxa = (thetaCoxa + 135.0).coerceIn(0.0, 180.0)    //compensate for leg mounting
                     Point.forLeg(
                         coxa = thetaCoxa,
                         femur = thetaFemur,
@@ -262,18 +285,19 @@ class HexapodController(
                 else -> error("Leg index not known. This should never happen")
             }
 
-            if(point.coxa > 0) leg.coxa.angle = point.coxa.toInt()
-            if(point.femur > 0) leg.femur.angle = point.femur.toInt()
-            if(point.tibia > 0) leg.tibia.angle = point.tibia.toInt()
+            leg.coxa.angle = point.coxa.toInt()
+            leg.femur.angle = point.femur.toInt()
+            leg.tibia.angle = point.tibia.toInt()
+
 
             //<editor-fold desc="Debug">
             val invertIfNeeded: (angle: Double) -> Double = { angle ->
                 if (legIndex < 0) angle else (180 - angle)
             }
             screen.legs[legIndex] = Point(
-                x = invertIfNeeded(thetaCoxa),
-                y = invertIfNeeded(thetaFemur),
-                z = invertIfNeeded(thetaTibia),
+                x = invertIfNeeded(point.coxa),
+                y = invertIfNeeded(point.femur),
+                z = invertIfNeeded(point.tibia),
             )
             //</editor-fold>
         }

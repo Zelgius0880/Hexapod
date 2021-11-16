@@ -111,7 +111,7 @@ class Servo(
 
 enum class ServoConfig(val actuationRange: Int, val minPulse: Long, val maxPulse: Long) {
     MG90S(actuationRange = 180, minPulse = 450, maxPulse = 2450),
-    MG90Sv2(actuationRange = 180, minPulse = 450, maxPulse = 2450),
+    MG90Sv2(actuationRange = 200, minPulse = 450, maxPulse = 2450),
     MG90D(actuationRange = 180, minPulse = 700, maxPulse = 2100)
     //MG90D(actuationRange = 180, minPulse = 690, maxPulse = 2200)
 }

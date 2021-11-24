@@ -5,6 +5,7 @@ import java.nio.ByteOrder
 import java.nio.ShortBuffer
 
 class Control(val type: CONTROLS, val data: ByteBuffer) {
+    var timestamp: Long = System.currentTimeMillis()
     val batteryLevel: Int = data.short.toInt()
     val isPressed: Boolean = if (type != CONTROLS.STICK) data.short == 0x01.toShort() else false
 

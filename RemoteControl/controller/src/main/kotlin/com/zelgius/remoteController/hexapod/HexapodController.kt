@@ -37,9 +37,12 @@ class HexapodController(
             Point(-2.0, 0.0, -3.0),
             Point(-3.0, 0.0, -1.0)
         )
+
+        const val LONG_PRESS_DELAY = 1000L
     }
 
     private var rotationAxes = Point()
+    private var pressedControl: Control? = null
 
     private val legs: Array<Leg> = arrayOf(
         Leg(
@@ -102,6 +105,22 @@ class HexapodController(
     fun run() {
         thread {
             while (!stop) {
+                pressedControl?.let {
+                    if (System.currentTimeMillis() - it.timestamp > 100L) {
+                        it.timestamp = System.currentTimeMillis()
+                        when (it.type) {
+                            CONTROLS.CROSS_UP, CONTROLS.CROSS_DOWN -> {
+                                rotationAxes.z =
+                                    if (it.type == CONTROLS.CROSS_DOWN) (rotationAxes.z + 1).coerceAtMost(20.0)
+                                    else (rotationAxes.z - 1).coerceAtLeast(-20.0)
+
+                                gait?.computeOffsetAxes(rotationAxes)
+                            }
+                            else -> {}
+                        }
+                    }
+                }
+
                 if (System.currentTimeMillis() - lastStamp > Gait.FRAME_TIME_MS) {
                     val l = pointL
                     val r = pointR
@@ -116,11 +135,10 @@ class HexapodController(
                         }
 
                     lastStamp = System.currentTimeMillis()
+
                 }
+                Thread.sleep(10L)
             }
-
-
-            Thread.sleep(10)
         }
     }
 
@@ -129,6 +147,7 @@ class HexapodController(
             if (!testMode || value !is TetrapodGait) {
                 field = value
                 screen.gait = value
+                rotationAxes = Point()
             } else {
                 test(legs[testLegIndex])
             }
@@ -138,6 +157,8 @@ class HexapodController(
 
     fun reset() {
         gait = null
+        pointR = null
+        pointL = null
         legs.forEachIndexed { index, leg ->
             leg.coxa.angle = 90 + CAL[index].coxa.toInt()
             leg.tibia.angle = 90 + CAL[index].tibia.toInt()
@@ -179,7 +200,7 @@ class HexapodController(
 
         val l = Point(-xL, yL, zL)
 
-        // on r stick x and y are inverted ¯\_(ツ)_/¯
+        // on r stick, x and y are inverted ¯\_(ツ)_/¯
         val r = Point(-yR, xR, zR)
 
         if (!l.isDeadBand) pointL = l
@@ -187,16 +208,45 @@ class HexapodController(
 
     }
 
-    fun moveAxes(control: Control) {
-        when (control.type) {
-            CONTROLS.CROSS_LEFT -> rotationAxes.x = (rotationAxes.x - 1).coerceAtLeast(-20.0)
-            CONTROLS.CROSS_RIGHT -> rotationAxes.x = (rotationAxes.x + 1).coerceAtMost(20.0)
-            CONTROLS.CROSS_UP -> rotationAxes.y = (rotationAxes.y - 1).coerceAtLeast(-20.0)
-            CONTROLS.CROSS_DOWN -> rotationAxes.y = (rotationAxes.y + 1).coerceAtMost(20.0)
-            else -> return
+    fun moveAxes(control: Control): Boolean {
+        val rumble = when (control.type) {
+            CONTROLS.CROSS_LEFT -> {
+                if (control.isPressed) {
+                    rotationAxes.x = (rotationAxes.x - 1).coerceAtLeast(-20.0)
+                }
+                rotationAxes.x == -20.0 && control.isPressed
+            }
+            CONTROLS.CROSS_RIGHT -> {
+                if (control.isPressed) {
+                    rotationAxes.x = (rotationAxes.x + 1).coerceAtMost(20.0)
+                }
+                rotationAxes.x == 20.0 && control.isPressed
+            }
+            CONTROLS.CROSS_UP, CONTROLS.CROSS_DOWN -> {
+                if (control.isPressed) {
+                    pressedControl = control
+                    false
+                } else {
+                    val old = pressedControl
+                    pressedControl = null
+                    if (control.timestamp - (old?.timestamp ?: control.timestamp) < LONG_PRESS_DELAY) {
+                        if (control.type == CONTROLS.CROSS_UP) {
+                            rotationAxes.y = (rotationAxes.y + 1).coerceAtMost(20.0)
+                            rotationAxes.x == 20.0
+                        } else {
+                            rotationAxes.y = (rotationAxes.y - 1).coerceAtLeast(-20.0)
+                            rotationAxes.y == -20.0
+                        }
+                    } else false
+                }
+            }
+            else -> return false
         }
 
-        gait?.moveAxes(rotationAxes)
+        gait?.computeOffsetAxes(rotationAxes)
+        screen.temp = rotationAxes
+
+        return rumble
     }
 
     @Synchronized
@@ -226,7 +276,7 @@ class HexapodController(
 
             val point = when (legIndex) {
                 0 -> {
-                    thetaCoxa = (thetaCoxa + 45.0).coerceIn(0.0, 180.0)     //compensate for leg mounting
+                    thetaCoxa = (thetaCoxa + 45.0).coerceIn(0.0, 180.0) //compensate for leg mounting
                     Point.forLeg(
                         coxa = thetaCoxa,
                         femur = thetaFemur,
@@ -234,7 +284,7 @@ class HexapodController(
                     )
                 }
                 1 -> {
-                    thetaCoxa = (thetaCoxa + 90.0).coerceIn(0.0, 180.0)     //compensate for leg mounting
+                    thetaCoxa = (thetaCoxa + 90.0).coerceIn(0.0, 180.0) //compensate for leg mounting
                     Point.forLeg(
                         coxa = thetaCoxa,
                         femur = thetaFemur,
@@ -242,7 +292,7 @@ class HexapodController(
                     )
                 }
                 2 -> {
-                    thetaCoxa = (thetaCoxa + 135.0).coerceIn(0.0, 180.0)    //compensate for leg mounting
+                    thetaCoxa = (thetaCoxa + 135.0).coerceIn(0.0, 180.0) //compensate for leg mounting
                     Point.forLeg(
                         coxa = thetaCoxa,
                         femur = thetaFemur,
@@ -250,10 +300,10 @@ class HexapodController(
                     )
                 }
                 3 -> {
-                    thetaCoxa = (if (thetaCoxa < 0)                                //compensate for leg mounting
-                        thetaCoxa + 225.0             // (need to use different
-                    else                                              //  positive and negative offsets
-                        thetaCoxa - 135.0).coerceIn(0.0, 180.0)            //  due to atan2 results above!)
+                    thetaCoxa = (if (thetaCoxa < 0)              //compensate for leg mounting
+                        thetaCoxa + 225.0                        // (need to use different
+                    else                                         //  positive and negative offsets
+                        thetaCoxa - 135.0).coerceIn(0.0, 180.0)  //  due to atan2 results above!)
                     Point.forLeg(
                         coxa = thetaCoxa,
                         femur = 180 - thetaFemur,
@@ -261,10 +311,10 @@ class HexapodController(
                     )
                 }
                 4 -> {
-                    thetaCoxa = (if (thetaCoxa < 0)                                //compensate for leg mounting
-                        thetaCoxa + 270.0                // (need to use different
-                    else                                              //  positive and negative offsets
-                        thetaCoxa - 90.0).coerceIn(0.0, 180.0)                 //  due to atan2 results above!)
+                    thetaCoxa = (if (thetaCoxa < 0)             //compensate for leg mounting
+                        thetaCoxa + 270.0                       // (need to use different
+                    else                                        //  positive and negative offsets
+                        thetaCoxa - 90.0).coerceIn(0.0, 180.0)  //  due to atan2 results above!)
                     Point.forLeg(
                         coxa = thetaCoxa,
                         femur = 180 - thetaFemur,
@@ -272,10 +322,10 @@ class HexapodController(
                     )
                 }
                 5 -> {
-                    thetaCoxa = (if (thetaCoxa < 0)                              //compensate for leg mounting
-                        thetaCoxa + 315.0              // (need to use different
-                    else                                            //  positive and negative offsets
-                        thetaCoxa - 45.0).coerceIn(0.0, 180.0)                  //  due to atan2 results above!)
+                    thetaCoxa = (if (thetaCoxa < 0)             //compensate for leg mounting
+                        thetaCoxa + 315.0                       // (need to use different
+                    else                                        //  positive and negative offsets
+                        thetaCoxa - 45.0).coerceIn(0.0, 180.0)  //  due to atan2 results above!)
                     Point.forLeg(
                         coxa = thetaCoxa,
                         femur = 180 - thetaFemur,
@@ -292,7 +342,7 @@ class HexapodController(
 
             //<editor-fold desc="Debug">
             val invertIfNeeded: (angle: Double) -> Double = { angle ->
-                if (legIndex < 0) angle else (180 - angle)
+                if (legIndex >= 3) angle else (180 - angle)
             }
             screen.legs[legIndex] = Point(
                 x = invertIfNeeded(point.coxa),

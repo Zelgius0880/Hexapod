@@ -14,9 +14,12 @@ import java.io.IOException
 import java.net.Socket
 import kotlin.concurrent.timerTask
 
-val socket: Socket by lazy {
-    Socket("127.0.0.1", 5000)
-}
+var _socket: Socket? = null
+    get() = if (field == null)
+        Socket("127.0.0.1", 5000)
+    else field
+
+val socket: Socket get() = _socket!!
 
 val datagramManager = DatagramManager {}
 private val context by lazy { Pi4J.newAutoContext() }
@@ -68,7 +71,10 @@ fun main(args: Array<String>) = runBlocking {
             CONTROLS.CROSS_RIGHT,
             CONTROLS.CROSS_UP,
             CONTROLS.CROSS_DOWN -> {
-                if (it.isPressed) hexapod.moveAxes(it)
+                if (hexapod.moveAxes(it))
+                    RemoteCommand(socket).apply {
+                        rumble(300)
+                    }
             }
             CONTROLS.BUTTON_A -> if (it.isPressed) hexapod.gait = TetrapodGait()
             CONTROLS.BUTTON_B -> if (it.isPressed) hexapod.gait = TripodGait()
@@ -147,32 +153,48 @@ fun main(args: Array<String>) = runBlocking {
 
     while (true) {
         val calibrationValue = 1.11
-        DebugScreen.temp = analogDriver.readToVoltage(ADS1115Driver.Pin.A0) * 2 + calibrationValue// * 0.0001875 * 2
+        try {
+            DebugScreen.voltage =
+                analogDriver.readToVoltage(ADS1115Driver.Pin.A0) * 2 + calibrationValue// * 0.0001875 * 2
+        } catch (e: Pi4JException) {
+            println(e.message)
+        }
+
         screen.render()
         delay(1000)
+
     }
 }
 
 
 fun updateIndicators(arm: Arm) {
-    when (arm.currentIndex) {
-        0 -> RemoteCommand(socket).apply {
-            sendLed(led1 = true)
-        }
+    try {
+        when (arm.currentIndex) {
+            0 -> RemoteCommand(socket).apply {
+                sendLed(led1 = true)
+            }
 
-        1 -> RemoteCommand(socket).apply {
-            sendLed(led2 = true)
-        }
+            1 -> RemoteCommand(socket).apply {
+                sendLed(led2 = true)
+            }
 
-        2 -> RemoteCommand(socket).apply {
-            sendLed(led3 = true)
-        }
+            2 -> RemoteCommand(socket).apply {
+                sendLed(led3 = true)
+            }
 
-        3 -> RemoteCommand(socket).apply {
-            sendLed(led4 = true)
+            3 -> RemoteCommand(socket).apply {
+                sendLed(led4 = true)
+            }
+            else -> return
+        }.also { it.rumble(100) }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        try {
+            socket.close()
+        } catch (e: Exception) {
         }
-        else -> return
-    }.also { it.rumble(100) }
+        _socket = null
+    }
 
     // TODO Broadcast the different indicators
 }

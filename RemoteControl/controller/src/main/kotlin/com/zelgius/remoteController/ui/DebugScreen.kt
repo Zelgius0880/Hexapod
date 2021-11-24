@@ -3,15 +3,12 @@ package com.zelgius.remoteController.ui
 import com.github.ajalt.mordant.rendering.BorderStyle.Companion.SQUARE_DOUBLE_SECTION_SEPARATOR
 import com.github.ajalt.mordant.rendering.TextAlign
 import com.github.ajalt.mordant.rendering.TextColors
-import com.github.ajalt.mordant.rendering.Widget
 import com.github.ajalt.mordant.table.Borders
 import com.github.ajalt.mordant.table.ColumnWidth
 import com.github.ajalt.mordant.table.table
 import com.github.ajalt.mordant.terminal.Terminal
 import com.zelgius.remoteController.hexapod.Gait
 import com.zelgius.remoteController.hexapod.Point
-import com.zelgius.remoteController.hexapod.HexapodController.Leg.Companion.FEMUR_LENGTH
-import com.zelgius.remoteController.hexapod.HexapodController.Leg.Companion.TIBIA_LENGTH
 
 object DebugScreen {
 
@@ -20,7 +17,8 @@ object DebugScreen {
 
     var gait: Gait? = null
 
-    var temp: Any = 0.0
+    var voltage: Double = 0.0
+    var temp: Any = Unit
 
     private var alreadyRendered = false
 
@@ -80,7 +78,10 @@ object DebugScreen {
                 cell("GAIT") {}
                 cell(gait?.let { it::class.simpleName } ?: "None")
             }
-
+            row {
+                cell("VOLTAGE") {}
+                cell(voltage)
+            }
             row {
                 cell("TEMP") {}
                 cell(temp)
@@ -89,7 +90,6 @@ object DebugScreen {
     }
 
     fun render() {
-
         alreadyRendered = true
         val legs = buildLegsTable(0..5)
         val info = buildInfoTable()

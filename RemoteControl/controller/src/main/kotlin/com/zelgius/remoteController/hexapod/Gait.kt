@@ -1,6 +1,9 @@
 package com.zelgius.remoteController.hexapod
 
-import kotlin.math.*
+import kotlin.math.abs
+import kotlin.math.absoluteValue
+import kotlin.math.cos
+import kotlin.math.sin
 
 
 abstract class Gait {
@@ -31,23 +34,26 @@ abstract class Gait {
 
         //const val FRAME_TIME_MS = 100L
         const val SPEED_HIGH = SPEED_LOW / 3
-        const val A12DEG = 209440L         //12 degrees in radians x 1,000,000
+        const val A12DEG = 209440.0         //12 degrees in radians x 1,000,000
+        const val A30DEG = 523599.0         //30 degrees in radians x 1,000,000
     }
 
     abstract val case: IntArray
     abstract val numTicksDivider: Double
 
-    private val stepHeightMultiplier = 1.0
 
-    val current = Array(6) { HOME[it].copy() }
+    protected val current = Array(6) { HOME[it].copy() }
     var tick = 0
 
     private var duration = SPEED_HIGH
-    var sinRotationZ = 0.0
-    var cosRotationZ = 0.0
+    private var sinRotationZ = 0.0
+    private var cosRotationZ = 0.0
     var isFast = true
 
-    val numTicks get() = (duration / FRAME_TIME_MS / numTicksDivider)
+    private val offset = Array(6) { Point() }
+
+
+    private val numTicks get() = (duration / FRAME_TIME_MS / numTicksDivider)
 
     fun computeMovement(r: Point, l: Point): List<Point> {
 
@@ -65,7 +71,9 @@ abstract class Gait {
         else tick = 0
 
 
-        return current.toList()
+        return current.mapIndexed { index, point ->
+            point + offset[index]
+        }
     }
 
     private fun computeStrides(commanded: Point): Point {
@@ -95,32 +103,36 @@ abstract class Gait {
             ((stride.x + rotOffsetX) / 2.0).coerceIn(-50.0, 50.0),
             ((stride.y + rotOffsetY) / 2.0).coerceIn(-50.0, 50.0),
             if ((stride.x + rotOffsetX).absoluteValue > (stride.y + rotOffsetY).absoluteValue)
-                stepHeightMultiplier * (stride.x + rotOffsetX) / 4.0
+                (stride.x + rotOffsetX) / 4.0
             else
-                stepHeightMultiplier * (stride.y + rotOffsetY) / 4.0
+                (stride.y + rotOffsetY) / 4.0
         )
     }
 
     abstract fun computePosition(numTicks: Double, amplitude: Point, leg: Int)
 
-    fun moveAxes(p: Point) {
+    fun computeOffsetAxes(p: Point) {
         //compute rotation sin/cos values using controller inputs
-        //compute rotation sin/cos values using controller inputs
-        val sinRotX = sin(map(p.x, -20.0, 20.0, A12DEG.toDouble(), -A12DEG.toDouble()) / 1000000.0)
-        val cosRotX = cos(map(p.x, -20.0, 20.0, A12DEG.toDouble(), -A12DEG.toDouble()) / 1000000.0)
-        val sinRotY = sin(map(p.y, -20.0, 20.0, A12DEG.toDouble(), -A12DEG.toDouble()) / 1000000.0)
-        val cosRotY = cos(map(p.y, -20.0, 20.0, A12DEG.toDouble(), -A12DEG.toDouble()) / 1000000.0)
-
+        val sinRotX = sin(map(p.x, 20.0, -20.0, A12DEG, -A12DEG) / 1000000.0)
+        val cosRotX = cos(map(p.x, 20.0, -20.0, A12DEG, -A12DEG) / 1000000.0)
+        val sinRotY = sin(map(p.y, 20.0, -20.0, A12DEG, -A12DEG) / 1000000.0)
+        val cosRotY = cos(map(p.y, 20.0, -20.0, A12DEG, -A12DEG) / 1000000.0)
         // these variables are for the yaw, but it is already computed from the right stick
         val sinRotZ = sin(0.0)
         val cosRotZ = cos(0.0)
 
-        for (leg_num in 0..5) {
+        val translateZ = if (p.z > 0)
+            map(p.z, 1.0, 20.0, 0.0, 30.0)
+        else
+            map(p.z, -20.0, 00.0, -3 * 30.0, 0.0)
+
+
+        for (leg in 0..5) {
             //compute total distance from center of body to toe
             val total = Point(
-                HOME[leg_num].x + BODY[leg_num].x,
-                HOME[leg_num].y + BODY[leg_num].y,
-                HOME[leg_num].z + BODY[leg_num].z,
+                HOME[leg].x + BODY[leg].x,
+                HOME[leg].y + BODY[leg].y,
+                HOME[leg].z + BODY[leg].z,
             )
 
             //perform 3 axis rotations
@@ -143,27 +155,8 @@ abstract class Gait {
                     + total.z * cosRotX * cosRotY
                     - total.z)
 
-            // Calculate foot positions to achieve desired rotation
-            current[leg_num].x = HOME[leg_num].x + rotOffsetX
-            current[leg_num].y = HOME[leg_num].y + rotOffsetY
-            current[leg_num].z = HOME[leg_num].z + rotOffsetZ
-
-            //lock in offsets if commanded
-            /*if (capture_offsets === true) {
-                offset[leg_num].z = offset[leg_num].z + rotOffsetX
-                offset_Y.get(leg_num) = offset_Y.get(leg_num) + rotOffsetY
-                offset_Z.get(leg_num) = offset_Z.get(leg_num) + rotOffsetZ + translateZ
-               current[leg_num].x = HOME[leg_num].x
-               current[leg_num].y = HOME[leg_num].y
-               current[leg_num].z = HOME[leg_num].z
-            }*/
+            offset[leg] = Point(rotOffsetX, rotOffsetY, rotOffsetZ + translateZ)
         }
-
-        //if offsets were commanded, exit current mode
-        /*if (capture_offsets === true) {
-            capture_offsets = false
-            mode = 0
-        }*/
     }
 
     private fun map(x: Double, inMin: Double, inMax: Double, outMin: Double, outMax: Double): Double {
@@ -179,4 +172,15 @@ data class Point(var x: Double = 0.0, var y: Double = 0.0, var z: Double = 0.0) 
     val isDeadBand: Boolean
         get() = abs(x) <= 15 && abs(y) <= 15 && abs(z) <= 15
 
+    operator fun plus(point: Point): Point = Point(
+        x = x + point.x,
+        y = y + point.y,
+        z = z + point.z,
+    )
+
+    operator fun div(double: Double) = Point(
+        x = x / double,
+        y = y / double,
+        z = z / double
+    )
 }

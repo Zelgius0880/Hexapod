@@ -13,7 +13,7 @@ class Arm private constructor() {
 
     var enabled = false
 
-    private val servoIndex = arrayOf(12, 9, 10, 11)
+    private val servoIndex = arrayOf(7, 9, 10, 11)
 
     var currentIndex = 0
     val currentServo

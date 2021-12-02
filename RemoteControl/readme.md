@@ -22,6 +22,19 @@ cd xwiimote-bindings
 sudo make
 sudo make install
 ````
+
+#PiGPIO
+````
+sudo apt-get install python3-pip -y
+# not installing pip may leads to ModuleNotFoundError: No module named 'distutils.core'
+````
+````
+wget https://github.com/joan2937/pigpio/archive/master.zip
+unzip master.zip
+cd pigpio-master
+make
+sudo make install
+````
 # mjpg_streamer
 
 # Java 11 for ARM
@@ -37,4 +50,9 @@ sudo update-alternatives --install /usr/bin/javac javac /usr/lib/jvm/zulu11.41.7
 
 sudo update-alternatives --config java
 sudo update-alternatives --config javac
+````
+
+#Debug
+````
+sudo java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005 -jar controller-1.0-SNAPSHOT-all.jar
 ````

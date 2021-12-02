@@ -144,28 +144,3 @@ class ADS1115Driver(
         SINGLE(0x0100)
     }
 }
-
-fun Double.toBatteryLevel() = when {
-    this > 8.3 -> 100
-    this > 8.22 -> 95
-    this > 8.16 -> 90
-    this > 8.05 -> 85
-    this > 7.97 -> 80
-    this > 7.91 -> 75
-    this > 7.83 -> 70
-    this > 7.75 -> 65
-    this > 7.71 -> 60
-    this > 7.67 -> 55
-    this > 7.63 -> 50
-    this > 7.59 -> 45
-    this > 7.57 -> 40
-    this > 7.53 -> 35
-    this > 7.49 -> 30
-    this > 7.45 -> 25
-    this > 7.41 -> 20
-    this > 7.37 -> 15
-    this > 7.22 -> 10
-    this > 6.55 -> 5
-    else -> 0
-}
-

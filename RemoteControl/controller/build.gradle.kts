@@ -1,10 +1,12 @@
 import org.jetbrains.kotlin.gradle.dsl.KotlinCompile
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import com.google.protobuf.gradle.protoc
 
 plugins {
     application
     kotlin("jvm")
     id("com.github.johnrengelman.shadow") version "7.0.0"
+    id("com.google.protobuf")
 }
 
 val mainPackage = "com.zelgius.remoteController"
@@ -26,6 +28,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2-native-mt")
     implementation("com.github.ajalt.mordant:mordant:2.0.0-beta2")
     implementation("com.github.ajalt.mordant:mordant:2.0.0-beta2")
+    implementation("com.google.protobuf:protobuf-java:3.6.1")
 
     testImplementation("org.slf4j:slf4j-simple:2.0.0-alpha0")
     testImplementation(kotlin("test-junit5"))
@@ -66,3 +69,9 @@ tasks {
 
 setupJavaDeployTasks( tasks.shadowJar.get().archiveFile.get().asFile, tasks.shadowJar)
 
+protobuf {
+    protobuf.protoc {
+        // The artifact spec for the Protobuf Compiler
+        artifact = "com.google.protobuf:protoc:3.6.1"
+    }
+}

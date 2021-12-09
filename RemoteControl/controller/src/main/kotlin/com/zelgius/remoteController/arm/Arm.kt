@@ -8,12 +8,12 @@ class Arm private constructor() {
     // ----------------
     //
     // O -- O -- O -- <
-    // 12    9   10   11
+    // 9    10   11   7
     //
 
     var enabled = false
 
-    private val servoIndex = arrayOf(7, 9, 10, 11)
+    private val servoIndex = arrayOf(9, 10, 11, 7)
 
     var currentIndex = 0
     val currentServo
@@ -35,10 +35,10 @@ class Arm private constructor() {
 
     fun initPosition() {
         currentIndex = 0
-        driver.servos[12].angle = 90
-        driver.servos[9].angle = 160
+        driver.servos[9].angle = 65
         driver.servos[10].angle = 160
-        driver.servos[11].angle = 90
+        driver.servos[11].angle = 160
+        driver.servos[7].angle = 60
     }
 
     enum class Direction { BACKWARD, FORWARD }
@@ -48,7 +48,8 @@ class Arm private constructor() {
         override fun run() {
             while (
                 !stop
-                && ((servo.currentAngle > 0 && direction == Direction.FORWARD)
+                && ((currentIndex == 0 && direction == Direction.FORWARD && servo.currentAngle > 65)
+                        || (currentIndex != 0 && servo.currentAngle > 0 && direction == Direction.FORWARD)
                         || (servo.currentAngle < 180 && direction == Direction.BACKWARD))
             ) {
                 servo.angle = servo.currentAngle + when (direction) {
@@ -59,8 +60,10 @@ class Arm private constructor() {
                 sleep(10)
             }
 
-            if (((servo.currentAngle <= 0 && direction == Direction.FORWARD)
-                        || (servo.currentAngle >= 180 && direction == Direction.BACKWARD))
+            if (
+                (currentIndex == 0 && direction == Direction.FORWARD && servo.currentAngle <= 65)
+                || (servo.currentAngle <= 0 && direction == Direction.FORWARD)
+                || (servo.currentAngle >= 180 && direction == Direction.BACKWARD)
             ) {
                 reached()
             }
@@ -96,7 +99,7 @@ class Arm private constructor() {
     }
 
     companion object {
-        suspend fun newInstance(driver: ServoDriver): Arm =
+        fun newInstance(driver: ServoDriver): Arm =
             Arm().apply {
                 this.driver = driver
                 initPosition()

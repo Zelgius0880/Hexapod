@@ -1,0 +1,20 @@
+package com.zelgius.remoteController;
+message Status {
+  required double voltage = 1;
+  required Walk walkMode = 2;
+  required double pitch = 3;
+  required double yaw = 4;
+  repeated ArmSegment armSegments = 5;
+}
+
+message ArmSegment {
+  required double angle = 1;
+  required bool isSelected = 2;
+}
+
+enum Walk {
+  Ripple = 1;
+  Tetrapod = 2;
+  Wave = 3;
+  Tripod = 4;
+}

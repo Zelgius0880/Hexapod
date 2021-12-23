@@ -1,0 +1,35 @@
+syntax = "proto3";
+package com.zelgius.controller;
+
+message Control {
+
+    Type type = 1;
+    bool is_pressed = 2;
+    sint32 x_l = 3;
+    sint32 y_l = 4;
+    sint32 z_l = 5;
+    sint32 x_r = 6;
+    sint32 y_r = 7;
+    sint32 z_r = 8;
+
+    enum Type {
+        CROSS_LEFT = 0;
+        CROSS_RIGHT = 1;
+        CROSS_UP = 2;
+        CROSS_DOWN = 3;
+        BUTTON_A = 4;
+        BUTTON_B = 5;
+        BUTTON_X = 11;
+        BUTTON_Y = 12;
+        BUTTON_MINUS = 7;
+        BUTTON_PLUS = 6;
+        BUTTON_HOME = 8;
+        BUTTON_L = 13;
+        BUTTON_R = 14;
+        BUTTON_ZL = 15;
+        BUTTON_ZR = 16;
+        BUTTON_STICK_L = 17;
+        BUTTON_STICK_R = 18;
+        STICK = 19;
+    }
+}

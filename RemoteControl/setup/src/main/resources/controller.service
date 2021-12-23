@@ -1,0 +1,14 @@
+[Unit]
+Description=Create the camera server
+
+[Service]
+ExecStart=/usr/bin/java -jar controller-1.0-SNAPSHOT-all.jar
+WorkingDirectory=/root/
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
+

@@ -5,10 +5,9 @@ import com.zelgius.drivers.servo.Servo
 import com.zelgius.drivers.servo.ServoConfig
 import com.zelgius.drivers.servo.ServoDriver
 import com.zelgius.remoteController.controls.CONTROLS
-import com.zelgius.remoteController.controls.Control
+import com.zelgius.remoteController.controls.RemoteControl
 import com.zelgius.remoteController.hexapod.HexapodController.Leg.Companion.FEMUR_LENGTH
 import com.zelgius.remoteController.hexapod.HexapodController.Leg.Companion.TIBIA_LENGTH
-import com.zelgius.remoteController.ui.DebugScreen
 import kotlin.concurrent.thread
 import kotlin.math.acos
 import kotlin.math.atan2
@@ -17,8 +16,7 @@ import kotlin.math.sqrt
 
 class HexapodController(
     legDriver1: ServoDriver,
-    legDriver2: ServoDriver,
-    private val screen: DebugScreen
+    legDriver2: ServoDriver
 ) {
     companion object {
 
@@ -41,8 +39,10 @@ class HexapodController(
         const val LONG_PRESS_DELAY = 1000L
     }
 
-    private var rotationAxes = Point()
-    private var pressedControl: Control? = null
+    private var _rotationAxes = Point()
+    val rotationAxes get() = _rotationAxes
+
+    private var pressedControl: RemoteControl? = null
 
     private val legs: Array<Leg> = arrayOf(
         Leg(
@@ -106,15 +106,15 @@ class HexapodController(
         thread {
             while (!stop) {
                 pressedControl?.let {
-                    if (System.currentTimeMillis() - it.timestamp > 100L) {
+                    if (System.currentTimeMillis() - it.timestamp > 200L) {
                         it.timestamp = System.currentTimeMillis()
                         when (it.type) {
                             CONTROLS.CROSS_UP, CONTROLS.CROSS_DOWN -> {
-                                rotationAxes.z =
-                                    if (it.type == CONTROLS.CROSS_DOWN) (rotationAxes.z + 1).coerceAtMost(20.0)
-                                    else (rotationAxes.z - 1).coerceAtLeast(-20.0)
+                                _rotationAxes.z =
+                                    if (it.type == CONTROLS.CROSS_DOWN) (_rotationAxes.z + 1).coerceAtMost(20.0)
+                                    else (_rotationAxes.z - 1).coerceAtLeast(-20.0)
 
-                                gait?.computeOffsetAxes(rotationAxes)
+                                gait?.computeOffsetAxes(_rotationAxes)
                             }
                             else -> {}
                         }
@@ -146,8 +146,7 @@ class HexapodController(
         set(value) {
             if (!testMode || value !is TetrapodGait) {
                 field = value
-                screen.gait = value
-                rotationAxes = Point()
+                _rotationAxes = Point()
             } else {
                 test(legs[testLegIndex])
             }
@@ -184,7 +183,7 @@ class HexapodController(
         gait?.isFast = false
     }
 
-    fun move(control: Control) {
+    fun move(control: RemoteControl) {
 
         val (yL, xL, zL) = arrayOf(
             control.data.short,
@@ -208,19 +207,19 @@ class HexapodController(
 
     }
 
-    fun moveAxes(control: Control): Boolean {
+    fun moveAxes(control: RemoteControl): Boolean {
         val rumble = when (control.type) {
             CONTROLS.CROSS_LEFT -> {
                 if (control.isPressed) {
-                    rotationAxes.x = (rotationAxes.x - 1).coerceAtLeast(-20.0)
+                    _rotationAxes.x = (_rotationAxes.x - 1).coerceAtLeast(-20.0)
                 }
-                rotationAxes.x == -20.0 && control.isPressed
+                _rotationAxes.x == -20.0 && control.isPressed
             }
             CONTROLS.CROSS_RIGHT -> {
                 if (control.isPressed) {
-                    rotationAxes.x = (rotationAxes.x + 1).coerceAtMost(20.0)
+                    _rotationAxes.x = (_rotationAxes.x + 1).coerceAtMost(20.0)
                 }
-                rotationAxes.x == 20.0 && control.isPressed
+                _rotationAxes.x == 20.0 && control.isPressed
             }
             CONTROLS.CROSS_UP, CONTROLS.CROSS_DOWN -> {
                 if (control.isPressed) {
@@ -231,11 +230,11 @@ class HexapodController(
                     pressedControl = null
                     if (control.timestamp - (old?.timestamp ?: control.timestamp) < LONG_PRESS_DELAY) {
                         if (control.type == CONTROLS.CROSS_UP) {
-                            rotationAxes.y = (rotationAxes.y + 1).coerceAtMost(20.0)
-                            rotationAxes.x == 20.0
+                            _rotationAxes.y = (_rotationAxes.y + 1).coerceAtMost(20.0)
+                            _rotationAxes.x == 20.0
                         } else {
-                            rotationAxes.y = (rotationAxes.y - 1).coerceAtLeast(-20.0)
-                            rotationAxes.y == -20.0
+                            _rotationAxes.y = (_rotationAxes.y - 1).coerceAtLeast(-20.0)
+                            _rotationAxes.y == -20.0
                         }
                     } else false
                 }
@@ -243,8 +242,7 @@ class HexapodController(
             else -> return false
         }
 
-        gait?.computeOffsetAxes(rotationAxes)
-        screen.temp = rotationAxes
+        gait?.computeOffsetAxes(_rotationAxes)
 
         return rumble
     }
@@ -338,18 +336,6 @@ class HexapodController(
             leg.coxa.angle = point.coxa.toInt()
             leg.femur.angle = point.femur.toInt()
             leg.tibia.angle = point.tibia.toInt()
-
-
-            //<editor-fold desc="Debug">
-            val invertIfNeeded: (angle: Double) -> Double = { angle ->
-                if (legIndex >= 3) angle else (180 - angle)
-            }
-            screen.legs[legIndex] = Point(
-                x = invertIfNeeded(point.coxa),
-                y = invertIfNeeded(point.femur),
-                z = invertIfNeeded(point.tibia),
-            )
-            //</editor-fold>
         }
     }
 

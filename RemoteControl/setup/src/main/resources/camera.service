@@ -2,7 +2,7 @@
 Description=Create the camera server
 
 [Service]
-ExecStart=/usr/local/bin/mjpg_streamer -i "input_raspicam.so -x 600 -y 600 -fps 0.1 -quality 10" -o "output_http.so -w ./www"
+ExecStart=/usr/local/bin/mjpg_streamer -o "output_http.so -w ./www" -i "input_raspicam.so -x 1280 -y 720 -fps 15 -quality 20"
 WorkingDirectory=/home/pi/
 StandardOutput=inherit
 StandardError=inherit

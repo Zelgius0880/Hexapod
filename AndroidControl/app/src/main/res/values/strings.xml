@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">AndroidControl</string>
+    <string name="pitch">Pitch</string>
+    <string name="roll">Roll</string>
+    <string name="connecting">Connecting …</string>
+    <string name="retry">Retry</string>
+    <string name="connection_failed">The Hexapod program is unreachable</string>
+</resources>

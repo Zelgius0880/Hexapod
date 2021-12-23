@@ -1,12 +1,12 @@
 package com.zelgius.remoteController
 
-import com.zelgius.remoteController.controls.Control
+import com.zelgius.remoteController.controls.RemoteControl
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-class DatagramManager(val debug: Boolean = false, var inputReceived: (Control) -> Unit) : Thread() {
+class DatagramManager(val debug: Boolean = false, var inputReceived: (RemoteControl) -> Unit) : Thread() {
     private val ds = DatagramSocket(5005)
     private val buf = ByteArray(128)
 
@@ -25,7 +25,7 @@ class DatagramManager(val debug: Boolean = false, var inputReceived: (Control) -
 
             if(debug) println(result.joinToString())
 
-            inputReceived(Control(ByteBuffer.wrap(result).apply { order(ByteOrder.LITTLE_ENDIAN) }))
+            inputReceived(RemoteControl(ByteBuffer.wrap(result).apply { order(ByteOrder.LITTLE_ENDIAN) }))
         }
     }
 

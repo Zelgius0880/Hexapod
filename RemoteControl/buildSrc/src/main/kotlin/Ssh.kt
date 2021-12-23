@@ -46,7 +46,7 @@ fun Project.scp(
     remote: Remote = Remote(
         host = getProps("remote.host"),
         user = getProps("remote.user"),
-        keyFile = getProps("rsa_key", default = "../id_rsa")
+        keyFile = getProps("rsa_key", default = File(rootDir,"id_rsa").absolutePath)
     ),
     verbose: Boolean = false
 ) {
@@ -68,7 +68,7 @@ fun Project.ssh(
     remote: Remote = Remote(
         host = getProps("remote.host"),
         user = getProps("remote.user"),
-        keyFile = getProps("rsa_key", default = "../id_rsa")
+        keyFile = getProps("rsa_key", default = File(rootDir,"id_rsa").absolutePath)
     ),
     verbose: Boolean = false
 ) {

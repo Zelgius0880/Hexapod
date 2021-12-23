@@ -7,6 +7,7 @@ buildscript {
 
     dependencies {
         classpath ("org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}")
+        classpath ("com.google.protobuf:protobuf-gradle-plugin:0.8.18")
     }
 }
 

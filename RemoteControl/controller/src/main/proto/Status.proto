@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package com.zelgius.controller;
+
+message Status {
+  BatteryLevel level = 1;
+  Walk walk_mode = 2;
+  double pitch = 3;
+  double roll = 4;
+  double offset = 5;
+  bool is_fast = 6;
+  bool is_flash_light_on = 7;
+  repeated ArmSegment arm_segments = 8;
+
+  enum Walk {
+    RIPPLE = 0;
+    TETRAPOD = 1;
+    WAVE = 2;
+    TRIPOD = 3;
+    NONE = 4;
+  }
+
+  enum BatteryLevel {
+    LOW = 0;
+    MEDIUM = 1;
+    HIGH = 2;
+  }
+}
+
+message ArmSegment {
+  double angle = 1;
+  bool is_selected = 2;
+}
+
+
